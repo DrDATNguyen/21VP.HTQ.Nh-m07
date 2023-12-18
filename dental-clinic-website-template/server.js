@@ -6,7 +6,7 @@ const sql = require('mssql');
 // const dboperations = require('./cc');
 // const login = require('./login');
 // const config = require('./dbConfig'); 
-// var flash = require('connect-flash');
+var flash = require('connect-flash');
 //bring in mongoose
 // const mongoose = require('mongoose');
 
@@ -25,13 +25,15 @@ app.use(session({
   saveUninitialized: true
 }));
 
-// app.use(flash());
+app.use(flash());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'css')));
-// app.use(express.static(path.join(__dirname, 'js')));
+app.use(express.static(path.join(__dirname, 'js')));
 app.use(express.static(path.join(__dirname, 'img')));
+app.use(express.static(path.join(__dirname, 'lib')));
+
 
 
 //set template engine
@@ -144,7 +146,8 @@ app.post('/login',async (req, res) => {
 
     if (resultLogin) {
         // Login successful, resultLogin contains user data
-        res.send('Login successful');
+        res.render('appointment');
+
       } else {
         // Login failed, resultLogin is null or a designated failure indicator
         res.send('Login failed. Invalid credentials.');
@@ -235,7 +238,7 @@ app.post('/signup', async (req, res) => {
       const phoneNumber = req.body.phoneNumber;
   
       // Kiểm tra xem số điện thoại đã tồn tại chưa
-      const checkPhoneNumberQuery = `SELECT * FROM Customer WHERE PhoneNumber = @phoneNumber`;
+      const checkPhoneNumberQuery = `SELECT * FROM KhachHang WHERE SDT = @phoneNumber`;
       const checkPhoneNumberRequest = new sql.Request();
       checkPhoneNumberRequest.input('phoneNumber', sql.NVarChar, phoneNumber);
   
@@ -247,8 +250,8 @@ app.post('/signup', async (req, res) => {
   
       // Thực hiện truy vấn để thêm khách hàng mới
       const insertQuery = `
-        INSERT INTO Customer (FullName, BirthDate, Address, PhoneNumber, Password)
-        VALUES (@fullName, @birthDate, @address, @phoneNumber, @password)
+        INSERT INTO KhachHang (HotenKH, Ngaysinh, Diachi, SDT, Matkhau)
+        VALUES ('${fullName}', '${birthDate}', '${address}', '${phoneNumber}', '${password}')
       `;
   
       const insertRequest = new sql.Request();
@@ -313,7 +316,7 @@ async function loginUser(username, password) {
     throw new Error('Không thể kết nối đến cơ sở dữ liệu.');
   }
     // Chuẩn bị truy vấn SQL
-    const query = `SELECT * FROM Users WHERE Username = '${username}' AND Password = '${password}'`;
+    const query = `SELECT * FROM KhachHang WHERE SDT = '${username}' AND Matkhau = '${password}'`;
 
     // Thực hiện truy vấn
     const result = await sql.query(query);
@@ -412,3 +415,169 @@ async function loginUser(username, password) {
 // var server = app.listen(5000, function () {
 //     console.log('Server is running..');
 // });
+
+// app.post('/appoinment', async (req, res) => {
+//   try {
+//     // Kết nối đến cơ sở dữ liệu
+//      const connection = await sql.connect(config);
+
+//      // Kiểm tra trạng thái kết nối
+//      if (connection.connected) {
+//        console.log('Connected to SQL Server successfully.');
+//      } else {
+//        console.log('Failed to connect to SQL Server.');
+//        throw new Error('Không thể kết nối đến cơ sở dữ liệu.');
+//      }
+
+//     // Lấy thông tin từ body của request
+//     const HotenKH = req.body.fullname;
+//     const SDT = req.body.SDT;
+//     const tenNS = req.body.selectedDoctor;
+//     const ngay = req.body.date;
+//     const gio = req.body.time;
+//     const ngayio = ngay + ' ' + gio;
+
+//       // Lấy MaNS từ tên nha sĩ
+//       const MaNS = await getMaNSByTenNS(tenNS);
+
+//       if (!MaNS) {
+//           return res.status(400).json({ error: 'Nha sĩ không tồn tại.' });
+//       }
+
+//     // Kiểm tra thời gian rãnh của nha sĩ
+//     const checkAvailabilityQuery = `
+//       SELECT * FROM LichLamViec 
+//       WHERE MaNS = @MaNS AND Thoigiantrong = @ngayGio
+//     `;
+//     const checkAvailabilityRequest = new sql.Request();
+//     checkAvailabilityRequest.input('MaNS', sql.NVarChar, MaNS);
+//     checkAvailabilityRequest.input('ngayGio', sql.Date, ngayGio);
+//     const availabilityResult = await checkAvailabilityRequest.query(checkAvailabilityQuery);
+
+//     if (availabilityResult.recordset.length === 0) {
+//       return res.status(400).json({ error: 'Nha sĩ không có lịch làm việc vào thời điểm này.' });
+//     }
+
+//     // Thực hiện truy vấn để đặt lịch hẹn mới
+//     const insertAppointmentQuery = `
+//       INSERT INTO HeThongDatLichHen (MaNS, MaKH, Ngaygio)
+//       VALUES (@maNS, @maKH, @ngayGio)
+//     `;
+//     const insertAppointmentRequest = new sql.Request();
+//     insertAppointmentRequest.input('maNS', sql.NVarChar, maNS);
+//     insertAppointmentRequest.input('maKH', sql.NVarChar, maKH);
+//     insertAppointmentRequest.input('ngayGio', sql.Date, ngayGio);
+//     await insertAppointmentRequest.query(insertAppointmentQuery);
+
+//     // Trả về thông báo thành công
+//     res.status(200).json({ message: 'Đặt lịch hẹn thành công.' });
+//   } catch (error) {
+//     console.error('Error during appointment booking:', error);
+//     res.status(500).json({ error: 'Đã xảy ra lỗi trong quá trình xử lý.' });
+//   } finally {
+//     // Đảm bảo đóng kết nối sau khi hoàn thành
+//     await sql.close();
+//   }
+// });
+app.post('/appointment', async (req, res) => {
+  try {
+    // Kết nối đến cơ sở dữ liệu
+    const connection = await sql.connect(config);
+
+    // Lấy thông tin từ body của request
+    const SDT = parseInt(req.body.SDT, 10);
+    const tenNS = req.body.selectedDoctor; // Tên nha sĩ từ người dùng
+    const ngay = req.body.date;
+    const gio = req.body.time;
+    const ngayGio = `${ngay.split('/').reverse().join('-')}T${gio}:00`;
+    console.log(SDT);
+    console.log(tenNS);
+    console.log(ngay);
+    console.log(gio);
+    console.log(ngayGio);
+    // Check if required fields are present
+    // if (isNaN(SDT) || !tenNS || !ngayGio || !req.body.HotenKH || !req.body.Ngaysinh || !req.body.DiaChi) {
+    //   return res.status(400).json({ error: 'Invalid or missing fields in the request.' });
+    // }
+
+    // Lấy MaKH từ SDT
+    const maKH = await getMaKHBySDT(SDT);
+
+    if (!maKH) {
+      return res.status(400).json({ error: 'Khách hàng không tồn tại.' });
+    }
+
+    // Lấy MaNS từ tên nha sĩ
+    const maNS = await getMaNSByTenNS(tenNS);
+    console.log(maNS);
+    if (!maNS) {
+      return res.status(400).json({ error: 'Nha sĩ không tồn tại.' });
+    }
+
+    // Kiểm tra sự rãnh của nha sĩ
+    const checkAvailabilityQuery = `
+        SELECT * FROM LichLamViec 
+        WHERE MaNS = '${maNS}' AND Thoigiantrong = '${ngayGio}'
+    `;
+    const checkAvailabilityRequest = new sql.Request();
+    checkAvailabilityRequest.input('maNS', sql.Int, maNS);
+    checkAvailabilityRequest.input('ngayGio', sql.DateTime, ngayGio);
+    const availabilityResult = await checkAvailabilityRequest.query(checkAvailabilityQuery);
+    console.log(availabilityResult);
+    if (availabilityResult.recordset.length === 0) {
+      return res.status(400).json({ error: 'Nha sĩ không có lịch làm việc vào thời điểm này.' });
+    }
+
+    // Thực hiện truy vấn để đặt lịch hẹn mới
+    const insertAppointmentQuery = `
+        INSERT INTO HeThongDatLichHen (MaNS, HotenKH, Ngaygio, Ngaysinh, DiaChi, SDT, MaKH)
+        VALUES (@maNS, @hotenKH, @ngayGio, @ngaySinh, @diaChi, @SDT, @maKH)
+    `;
+    
+    const insertAppointmentRequest = new sql.Request();
+    insertAppointmentRequest.input('maNS', sql.Int, maNS);
+    insertAppointmentRequest.input('hotenKH', sql.NVarChar, req.body.HotenKH); // Tên khách hàng
+    insertAppointmentRequest.input('ngayGio', sql.DateTime, ngayGio);
+    insertAppointmentRequest.input('ngaySinh', sql.Date, req.body.Ngaysinh); // Ngày sinh khách hàng
+    insertAppointmentRequest.input('diaChi', sql.NVarChar, req.body.DiaChi); // Địa chỉ khách hàng
+    insertAppointmentRequest.input('SDT', sql.Int, SDT);
+    insertAppointmentRequest.input('maKH', sql.Int, maKH);
+    await insertAppointmentRequest.query(insertAppointmentQuery);
+
+    // Trả về thông báo thành công
+    res.status(200).json({ message: 'Đặt lịch hẹn thành công.' });
+  } catch (error) {
+    console.error('Error during appointment booking:', error);
+    res.status(500).json({ error: 'Đã xảy ra lỗi trong quá trình xử lý.' });
+  } finally {
+    // Đảm bảo đóng kết nối sau khi hoàn thành
+    await sql.close();
+  }
+});
+
+
+async function getMaNSByTenNS(tenNS) {
+  const query = `SELECT MaNS FROM NhaSi WHERE HotenNS = '${tenNS}'`;
+  const request = new sql.Request();
+  request.input('tenNS', sql.NVarChar, tenNS);
+  const result = await request.query(query);
+
+  if (result.recordset.length > 0) {
+      return result.recordset[0].MaNS;
+  } else {
+      return null; // Trả về null nếu không tìm thấy MaNS cho tên nha sĩ
+  }
+}
+// Hàm này sẽ lấy MaKH từ Bảng KhachHang dựa trên SDT
+async function getMaKHBySDT(SDT) {
+  const query = `SELECT MaKH FROM KhachHang WHERE SDT = '${SDT}'`;
+  const request = new sql.Request();
+  request.input('SDT', sql.Int, SDT);
+  const result = await request.query(query);
+
+  if (result.recordset.length > 0) {
+      return result.recordset[0].MaKH;
+  } else {
+      return null; // Trả về null nếu không tìm thấy MaKH cho SDT
+  }
+}
