@@ -22,11 +22,11 @@ const path = require('path');
 app.use(session({
   secret: 'your-secret-key',
   resave: false,
-  saveUninitialized: true
+  saveUninitialized: false
 }));
 
 app.use(flash());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'css')));
@@ -70,7 +70,7 @@ app.get('/', function (req, res) {
         if (err) console.log(err);
         try {
     
-            res.render('login');
+            res.render('ViewDrugList');
         
           } catch (error) {
             // Xử lý lỗi nếu có
@@ -122,17 +122,17 @@ var server = app.listen(5000, function () {
 
 
 // })
-app.get('/', async (request, response) => {
-  try {
+// app.get('/', async (request, response) => {
+//   try {
     
-    response.render('login');
+//     response.render('addDrug');
 
-  } catch (error) {
-    // Xử lý lỗi nếu có
-    console.error(error);
-    response.status(500).send('Internal Server Error');
-  }
-});
+//   } catch (error) {
+//     // Xử lý lỗi nếu có
+//     console.error(error);
+//     response.status(500).send('Internal Server Error');
+//   }
+// });
 //Route xử lý đăng nhập
 app.post('/login',async (req, res) => {
   const username = req.body.username;
@@ -146,6 +146,8 @@ app.post('/login',async (req, res) => {
 
     if (resultLogin) {
         // Login successful, resultLogin contains user data
+        // Lưu MaKH vào session
+        req.session.MaKH = resultLogin.MaKH;
         res.render('appointment');
 
       } else {
@@ -581,3 +583,199 @@ async function getMaKHBySDT(SDT) {
       return null; // Trả về null nếu không tìm thấy MaKH cho SDT
   }
 }
+// app.get('/profile', async (req, res) => {
+//   try {
+//     // Lấy MaKH từ session
+//     const maKH = req.session.MaKH;
+
+//     // Sử dụng MaKH để truy vấn thông tin khách hàng từ database
+//     const userProfile = await getProfileByMaKH(maKH);
+
+//     if (userProfile) {
+//       // Hiển thị thông tin khách hàng trên trang profile
+//       res.render('profile', { userProfile });
+//     } else {
+//       // Trường hợp MaKH không hợp lệ hoặc không tìm thấy thông tin khách hàng
+//       res.status(404).send('Profile not found.');
+//     }
+//   } catch (error) {
+//     console.error('Error during profile retrieval:', error);
+//     res.status(500).send('Internal Server Error');
+//   }
+// });
+app.get('/profile', async (req, res) => {
+  try {
+    // Lấy thông tin từ body của request
+    const maKH = req.session.MaKH; // Chắc chắn rằng bạn có thể lấy mã khách hàng từ request body
+    // Kết nối đến cơ sở dữ liệu
+    console.log(maKH)
+    const connection = await sql.connect(config);
+    // Thực hiện truy vấn SQL để lấy thông tin khách hàng từ cơ sở dữ liệu
+    const getProfileQuery = `SELECT * FROM KhachHang WHERE MaKH = '${maKH}'`;
+    const getProfileRequest = new sql.Request();
+    getProfileRequest.input('maKH', sql.Int, maKH);
+    const profileResult = await getProfileRequest.query(getProfileQuery);
+    const userProfile = profileResult.recordset[0];
+
+    // Kiểm tra xem có thông tin khách hàng hay không
+    if (!userProfile) {
+      return res.status(404).json({ error: 'Không tìm thấy thông tin khách hàng.' });
+    }
+
+    // Đổ thông tin vào form
+    res.render('profile', { userProfile });
+  } catch (error) {
+    console.error('Error while fetching profile:', error);
+    res.status(500).json({ error: 'Đã xảy ra lỗi trong quá trình xử lý.' });
+  }
+});
+app.post('/profile', async (req, res) => {
+  try {
+      // Kết nối đến cơ sở dữ liệu
+      const connection = await sql.connect(config);
+
+      // Lấy thông tin từ body của request
+      const maKH = req.session.MaKH; // Giả sử bạn đã lưu MaKH vào session khi người dùng đăng nhập
+      console.log(maKH)  
+      const hotenKH = req.body.hotenKH;
+      console.log(hotenKH)
+      const SDT = req.body.SDT;
+      console.log(SDT)
+      const diaChi = req.body.diaChi;
+      console.log(diaChi)
+      const ngaySinh = req.body.ngaySinh;
+
+      // Thực hiện truy vấn để cập nhật thông tin người dùng
+      const updateProfileQuery = `
+          UPDATE KhachHang
+          SET HotenKH = '${hotenKH}', SDT = '${SDT}', DiaChi = '${diaChi}', Ngaysinh = '${ngaySinh}'
+          WHERE MaKH = '${maKH}'
+      `;
+      const updateProfileRequest = new sql.Request();
+      updateProfileRequest.input('hotenKH', sql.NVarChar, hotenKH);
+      updateProfileRequest.input('SDT', sql.Int, SDT);
+      updateProfileRequest.input('diaChi', sql.NVarChar, diaChi);
+      updateProfileRequest.input('ngaySinh', sql.Date, ngaySinh);
+      await updateProfileRequest.query(updateProfileQuery);
+
+      // Thực hiện truy vấn để lấy thông tin khách hàng sau khi cập nhật
+    const getUpdatedProfileQuery = `SELECT * FROM KhachHang WHERE MaKH = '${maKH}'`;
+    const getUpdatedProfileRequest = new sql.Request();
+    getUpdatedProfileRequest.input('maKH', sql.Int, maKH);
+    const updatedProfileResult = await getUpdatedProfileRequest.query(getUpdatedProfileQuery);
+    const updatedUserProfile = updatedProfileResult.recordset[0];
+
+      // Trả về thông báo thành công và cập nhật thông tin trang profile
+    res.render('profile', { userProfile: updatedUserProfile });
+      // res.status(200).json({ message: 'Cập nhật thông tin thành công.' });
+  } catch (error) {
+      console.error('Error during profile update:', error);
+      res.status(500).json({ error: 'Đã xảy ra lỗi trong quá trình xử lý.' });
+  } finally {
+      // Đảm bảo đóng kết nối sau khi hoàn thành
+      await sql.close();
+  }
+});
+
+app.post('/addDrug', async (req, res) => {
+  try {
+    // Kết nối đến cơ sở dữ liệu
+    const connection = await sql.connect(config);
+
+    // Lấy thông tin từ body của request
+    const nameDrug = req.body.nameDrug;
+    const Information = req.body.Information;
+    const Quantity = req.body.Quantity;
+    const Expiredate = req.body.Expiredate;
+    const unit = req.body.unit;
+    console.log(nameDrug) 
+    console.log(Information) 
+    console.log(Quantity) 
+    console.log(Expiredate) 
+    console.log(unit) 
+    // Kiểm tra xem ngày hết hạn có hợp lệ hay không
+   
+    // Thực hiện truy vấn để thêm thuốc mới
+    const addDrugQuery = `
+      INSERT INTO Thuoc (TenThuoc, Chidinh, Soluongton, HSD,Donvitinh)
+      VALUES ('${nameDrug}', '${Information}', '${Quantity}', '${Expiredate}', '${unit}')
+    `;
+    
+    const addDrugRequest = new sql.Request();
+    addDrugRequest.input('nameDrug', sql.NVarChar, nameDrug);
+    addDrugRequest.input('Information', sql.NVarChar, Information);
+    addDrugRequest.input('Quantity', sql.Int, Quantity);
+    addDrugRequest.input('Expiredate', sql.Date, Expiredate);
+    addDrugRequest.input('unit', sql.NVarChar, unit);
+
+
+    await addDrugRequest.query(addDrugQuery);
+
+    // Trả về thông báo thành công hoặc chuyển hướng người dùng đến trang khác
+    res.status(200).json({ message: 'Thêm thuốc thành công.' });
+  } catch (error) {
+    console.error('Error during adding drug:', error);
+    res.status(500).json({ error: 'Đã xảy ra lỗi trong quá trình xử lý.' });
+  } finally {
+    // Đảm bảo đóng kết nối sau khi hoàn thành
+    await sql.close();
+  }
+});
+
+// Định nghĩa API endpoint để lấy dữ liệu từ SQL
+app.get('/ViewDrugList', async (req, res) => {
+  try {
+    const connection = await sql.connect(config);
+    // Thực hiện truy vấn SQL để lấy dữ liệu thuốc
+    const query = 'SELECT * FROM Thuoc';
+    const result = await sql.query(query);
+
+    // Render trang .ejs với dữ liệu thuốc
+    res.render('ViewDrugList', { drugList: result.recordset });
+  } catch (error) {
+    console.error('Error fetching drug list:', error);
+    res.status(500).json({ error: 'Đã xảy ra lỗi trong quá trình xử lý.' });
+  }
+});
+
+app.post('/updateDrug', async (req, res) => {
+  try {
+
+    const drugId = req.body.drugId;
+    console.log(drugId)
+    const updatedFields = req.body.updatedFields;
+    console.log(updatedFields)
+    const connection = await sql.connect(config);
+    console.log(updatedFields.TenThuoc) 
+    console.log(updatedFields.Soluongton) 
+    console.log(updatedFields.Donvitinh) 
+    console.log(updatedFields.Chidinh) 
+    console.log(updatedFields.HSD) 
+    console.log(drugId)
+    // Xử lý dữ liệu và thực hiện truy vấn để cập nhật thuốc
+    const updateDrugQuery = `
+      UPDATE Thuoc
+      SET
+        TenThuoc = '${updatedFields.TenThuoc}',
+        Soluongton = '${updatedFields.Soluongton}',
+        Donvitinh = '${updatedFields.Donvitinh}',
+        Chidinh = '${updatedFields.Chidinh}',
+        HSD = '${updatedFields.HSD}'
+      WHERE MaThuoc = '${drugId}'
+    `;
+    const updateDrugRequest = new sql.Request();
+    updateDrugRequest.input('maThuoc', sql.Int, drugId);
+    updateDrugRequest.input('tenThuoc', sql.NVarChar, updatedFields.TenThuoc);
+    updateDrugRequest.input('soLuongTon', sql.Int, updatedFields.Soluongton);
+    updateDrugRequest.input('donViTinh', sql.NVarChar, updatedFields.Donvitinh);
+    updateDrugRequest.input('chiDinh', sql.NVarChar, updatedFields.Chidinh);
+    updateDrugRequest.input('hsd', sql.Date, updatedFields.HSD);
+
+    await updateDrugRequest.query(updateDrugQuery);
+
+    res.status(200).json({ message: 'Cập nhật thành công.' });
+  } catch (error) {
+    console.error('Error during drug update:', error);
+    res.status(500).json({ error: 'Đã xảy ra lỗi trong quá trình xử lý.' });
+  }
+});
