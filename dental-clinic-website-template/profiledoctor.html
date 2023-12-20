@@ -30,6 +30,7 @@
 
     <!-- Template Stylesheet -->
     <link href="css/style.css" rel="stylesheet">
+    <script src="server.js" defer></script>
 </head>
 
 <body>
@@ -116,30 +117,33 @@
     </div>
 </div>
 
-<diz*dizcx
 
-
-<table>
-  <tr>
-    <th>Name</th>
-    <th>Gender</th>
-    <th>Age</th>
-    <th>Phone</th>
-  </tr>
-  <tr>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td><button>View more</button></td>
-  </tr>
-  <tr>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td><button>View more</button></td>
-  </tr>
+<div class="my-5">
+<table border="1" id="medicalTable">
+    <tr>
+        <th>Name Patient</th>
+        <th>Doctor</th>
+        <th>DATE</th>
+        <th>Result</th>
+        <th></th>
+    </tr>
+    <tr>
+        <td><input type="text" name="namePatient1"></td>
+        <td><input type="text" name="doctor1"></td>
+        <td><input type="text" name="date1"></td>
+        <td><input type="text" name="result1"></td>
+        <td><button class="viewMoreBtn" onclick="viewMore(1)">View more</button></td>
+    </tr>
+    <tr>
+        <td><input type="text" name="namePatient2"></td>
+        <td><input type="text" name="doctor2"></td>
+        <td><input type="text" name="date2"></td>
+        <td><input type="text" name="result2"></td>
+        <td><button class="viewMoreBtn" onclick="viewMore(2)">View more</button></td>
+    </tr>
+    <!-- Add more rows as needed -->
 </table>
-
+</div>
 
 
 
