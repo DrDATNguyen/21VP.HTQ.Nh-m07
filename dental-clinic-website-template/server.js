@@ -70,7 +70,7 @@ app.get('/', function (req, res) {
         if (err) console.log(err);
         try {
     
-            res.render('ViewDrugList');
+            res.render('UpdateDrug');
         
           } catch (error) {
             // Xử lý lỗi nếu có
@@ -696,9 +696,17 @@ app.post('/addDrug', async (req, res) => {
     // Kiểm tra xem ngày hết hạn có hợp lệ hay không
    
     // Thực hiện truy vấn để thêm thuốc mới
+    // const addDrugQuery = `
+    //   INSERT INTO Thuoc (TenThuoc, Chidinh, Soluongton, HSD,Donvitinh)
+    //   VALUES ('${nameDrug}', '${Information}', '${Quantity}', '${Expiredate}', '${unit}')
+    // `;
     const addDrugQuery = `
-      INSERT INTO Thuoc (TenThuoc, Chidinh, Soluongton, HSD,Donvitinh)
-      VALUES ('${nameDrug}', '${Information}', '${Quantity}', '${Expiredate}', '${unit}')
+    EXEC sp_ThemThuoc
+        @Soluongton = ${Quantity},
+        @HSD = '${Expiredate}',
+        @TenThuoc = '${nameDrug}',
+        @Donvitinh = '${unit}',
+        @Chidinh = '${Information}'
     `;
     
     const addDrugRequest = new sql.Request();
@@ -832,11 +840,6 @@ app.delete('/deleteDrug/:id', async (req, res) => {
     res.status(500).json({ error: 'An error occurred during the deletion.' });
   }
 });
-//Cập nhật bảng đặt lịch hẹn - NHA SĨ
-function deleteRow(button) {
-  var row = button.parentNode.parentNode;
-  row.parentNode.removeChild(row);
-}
 
 
 
@@ -851,12 +854,8 @@ app.post('/search', async (req, res) => {
       WHERE TenThuoc = '${searchName}'
     `;
 
-  // Create a new row and append it to the table
-  var table = document.querySelector("table tbody");
-  var newRow = table.insertRow();
-  newRow.insertCell().textContent = client;
-  newRow.insertCell().textContent = date;
-  newRow.insertCell().textContent = time;
+    const findDrugRequest = new sql.Request();
+    const result = await findDrugRequest.query(findDrugQuery);
 
     if (result.recordset.length === 0) {
       return res.render('UpdateDrug', { error: 'Drug not found.' });
