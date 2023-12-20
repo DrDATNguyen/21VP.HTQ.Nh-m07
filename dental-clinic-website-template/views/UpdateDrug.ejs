@@ -20,10 +20,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
 
     <!-- Libraries Stylesheet -->
-    <link href="/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
-    <link href="/animate/animate.min.css" rel="stylesheet">
-    <link href="/tempusdominus/css/tempusdominus-bootstrap-4.min.css" rel="stylesheet" />
-    <link href="/twentytwenty/twentytwenty.css" rel="stylesheet" />
+    <link href="lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
+    <link href="lib/animate/animate.min.css" rel="stylesheet">
+    <link href="lib/tempusdominus/css/tempusdominus-bootstrap-4.min.css" rel="stylesheet" />
+    <link href="lib/twentytwenty/twentytwenty.css" rel="stylesheet" />
 
     <!-- Customized Bootstrap Stylesheet -->
     <link href="/bootstrap.min.css" rel="stylesheet">
@@ -125,7 +125,7 @@
     <div class="container-fluid bg-primary py-5 hero-header mb-5">
         <div class="row py-3">
             <div class="col-12 text-center">
-                <h1 class="display-3 text-white animated zoomIn">Add Drug</h1>
+                <h1 class="display-3 text-white animated zoomIn">Update Drug</h1>
                 <a href="" class="h4 text-white">Home</a>
                 <i class="far fa-circle text-white px-2"></i>
                 <a href="" class="h4 text-white">Appointment</a>
@@ -135,50 +135,92 @@
     <!-- Hero End -->
 
 
-    <div class="container-fluid mt-5">
-        <table class="table table-bordered">
-            <thead>
-              <tr>
-                <th>Mã thuốc</th>
-                <th>Tên thuốc</th>
-                <th>Số lượng còn</th>
-                <th>Đơn vị tính</th>
-                <th>Chỉ định</th>
-                <th>Hạn sử dụng</th>
-                <th>Thao tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% drugList.forEach(drug => { %>
-                <tr>
-                  <td><%= drug.MaThuoc %></td>
-                  <td contenteditable="true" class="editable" data-field="TenThuoc"><%= drug.TenThuoc %></td>
-                  <td contenteditable="true" class="editable" data-field="Soluongton"><%= drug.Soluongton %></td>
-                  <td contenteditable="true" class="editable" data-field="Donvitinh"><%= drug.Donvitinh %></td>
-                  <td contenteditable="true" class="editable" data-field="Chidinh"><%= drug.Chidinh %></td>
-                  <td contenteditable="true" class="editable" data-field="HSD"><%= drug.HSD %></td>
-                  <td>
-                    <div class="btn-group mr-2" role="group" aria-label="Button group with nested dropdown">
-                        <form method="post" action="/updateDrug">
-                          <button type="submit" class="btn btn-success">Approve</button>
-                        </form>
-                      </div>
-                      
-                      <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
-                        <form action="/deleteDrug" method="POST">
-                          <button type="submit" class="btn btn-danger">Delete</button>
-                        </form>
-                      </div>
-                  </td>
-                </tr>
-              <% }); %>
-            </tbody>
-          </table>
-    </div>
+    <!-- Appointment Start -->
+    <div class="container-fluid bg-primary bg-appointment mb-5 wow fadeInUp" data-wow-delay="0.1s" style="margin-top: 90px;">
+        <div class="container">
+            <div class="row gx-5">
+                <!-- <div class="col-lg-6 py-5">
+                    <div class="py-5">
+                        <h1 class="display-5 text-white mb-4">We Are A Certified and Award Winning Dental Clinic You Can Trust</h1>
+                        <p class="text-white mb-0">Eirmod sed tempor lorem ut dolores. Aliquyam sit sadipscing kasd ipsum. Dolor ea et dolore et at sea ea at dolor, justo ipsum duo rebum sea invidunt voluptua. Eos vero eos vero ea et dolore eirmod et. Dolores diam duo invidunt lorem. Elitr ut dolores magna sit. Sea dolore sanctus sed et. Takimata takimata sanctus sed.</p>
+                    </div>
+                </div> -->
+                <!-- <div class="col-lg-6 py-5 px-100"> -->
+                    <div class="appointment-form h-100 d-flex flex-column justify-content-center text-center p-5 wow zoomIn" data-wow-delay="0.6s">
+                        <h1 class="text-white mb-4">Update Drug</h1>
+                            <form method="post" action="/search">
+                                <div class="row g-3">
+                                    <div class="col-12 col-sm-8">
+                                      <div class="d-flex">
+                                        <input class="form-control bg-light border-0 me-2" name = "searchName"type="search" id="searchName" placeholder="Search" aria-label="Search">
+                                        <button type="submit" class="btn btn-dark">Search</button>
+                                      </div>
+                                    </div></div>
+                            </form>
+                                <!-- <form method="post" action="/updateDrug" enctype="application/x-www-form-urlencoded">
+                                    <div class="row g-3 p-4">
+                                      <div class="col-12 col-sm-6">
+                                        <input type="text" class="form-control bg-light border-0" name="nameDrug" placeholder="Name Drug" style="height: 55px;" value="<%= typeof drug !== 'undefined' ? drug.TenThuoc : '' %>">
+                                      </div>
+                                      <div class="col-12 col-sm-6">
+                                        <input type="text" class="form-control bg-light border-0" name="Information" placeholder="Information" style="height: 55px;" value="<%= typeof drug !== 'undefined' ? drug.Chidinh : '' %>">
+                                      </div>
+                                      <div class="col-12 col-sm-6">
+                                        <input type="text" class="form-control bg-light border-0" name="Quantity" placeholder="Quantity" style="height: 55px;" value="<%= typeof drug !== 'undefined' ? drug.Soluongton : '' %>">
+                                      </div>
+                                      <div class="col-12 col-sm-6">
+                                        <input type="text" class="form-control bg-light border-0" name="Expiredate" placeholder="Expire date" style="height: 55px;" value="<%= typeof drug !== 'undefined' ? drug.HSD : '' %>">
+                                      </div>
+                                    </div>
+                                    <div class="col-12">
+                                      <button class="btn btn-dark w-100 py-3" type="submit">Update</button>
+                                    </div>
+                                  </form> -->
+                                   <form method="post" action="/updateDrug" enctype="application/x-www-form-urlencoded">
+                                    <div class="row g-3 p-4">
+                                      <div class="col-12 col-sm-6">
+                                        <input type="text" class="form-control bg-light border-0" name="nameDrug" placeholder="Name Drug" style="height: 55px;" value="cc">
+                                      </div>
+                                      <div class="col-12 col-sm-6">
+                                        <input type="text" class="form-control bg-light border-0" name="Information" placeholder="Information" style="height: 55px;" value="cc">
+                                      </div>
+                                      <div class="col-12 col-sm-6">
+                                        <input type="text" class="form-control bg-light border-0" name="Quantity" placeholder="Quantity" style="height: 55px;" value="2012-12-12">
+                                      </div>
+                                      <div class="col-12 col-sm-6">
+                                        <input type="text" class="form-control bg-light border-0" name="Expiredate" placeholder="Expire date" style="height: 55px;" value="cc">
+                                      </div>
+                                    </div>
+                                    <div class="col-12">
+                                      <button class="btn btn-dark w-100 py-3" type="submit">Update</button>
+                                    </div>
+                                  </form>
 
+                    </div>
+                <!-- </div> -->
+            </div>
+        </div>
+    </div>
+    <!-- Appointment End -->
     
-<!-- 
+
+    <!-- Newsletter Start -->
+    <div class="container-fluid position-relative pt-5 wow fadeInUp" data-wow-delay="0.1s" style="z-index: 1;">
+        <div class="container">
+            <div class="bg-primary p-5">
+                <form class="mx-auto" style="max-width: 600px;">
+                    <div class="input-group">
+                        <input type="text" class="form-control border-white p-3" placeholder="Your Email">
+                        <button class="btn btn-dark px-4">Sign Up</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Newsletter End -->
     
+
+    <!-- Footer Start -->
     <div class="container-fluid bg-dark text-light py-5 wow fadeInUp" data-wow-delay="0.3s" style="margin-top: -75px;">
         <div class="container pt-5">
             <div class="row g-5 pt-4">
@@ -231,7 +273,7 @@
                 </div>
             </div>
         </div>
-    </div> -->
+    </div>
     <!-- Footer End -->
 
 
@@ -254,47 +296,6 @@
 
     <!-- Template Javascript -->
     <script src="/main.js"></script>
-      <!-- Định nghĩa hàm formatDate -->
-      <!-- Trong tệp EJS -->
-      <!-- <script>
-        // Hàm chuyển định dạng ngày
-     
-      
-        // Sử dụng jQuery để xử lý sự kiện click của nút Update và Delete
-        $(document).ready(function () {
-          $('.update-btn').click(function () {
-            const drugId = $(this).data('id');
-            const updatedFields = {};
-            
-            // Lấy dữ liệu từ các ô có class "editable" và thuộc tính data-field
-            $('.editable').each(function () {
-              const field = $(this).data('field');
-              const value = $(this).text();
-              updatedFields[field] = value;
-            });
-      
-            // Gửi dữ liệu cập nhật lên server
-            $.ajax({
-              type: 'POST',
-              url: '/updateDrug',
-              data: { drugId, updatedFields },
-              success: function (response) {
-                alert(response.message);
-                // Cập nhật lại trang sau khi cập nhật dữ liệu
-                window.location.reload();
-              },
-              error: function (error) {
-                console.error('Error during drug update:', error);
-                alert('Đã xảy ra lỗi trong quá trình xử lý.');
-              },
-            });
-          });
-      
-          $('.delete-btn').click(function () {
-            // Xử lý sự kiện xóa tương tự như sự kiện cập nhật
-          });
-        });
-      </script> -->
 </body>
 
 </html>
