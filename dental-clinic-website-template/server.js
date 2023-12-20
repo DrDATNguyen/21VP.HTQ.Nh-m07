@@ -779,3 +779,51 @@ app.post('/updateDrug', async (req, res) => {
     res.status(500).json({ error: 'Đã xảy ra lỗi trong quá trình xử lý.' });
   }
 });
+// Định dạng bảng lựa chọn của List appointment - NHA SĨ
+
+
+document.addEventListener("DOMContentLoaded", function () {
+  var appointmentDateSelect = document.getElementById("appointmentDate");
+  var appointmentTimeSelect = document.getElementById("appointmentTime");
+
+  // Xóa chữ hiển thị khi người dùng tập trung vào ô lựa chọn
+  appointmentDateSelect.addEventListener("focus", function () {
+      hideLabel(appointmentDateSelect);
+  });
+
+  appointmentTimeSelect.addEventListener("focus", function () {
+      hideLabel(appointmentTimeSelect);
+  });
+
+  function hideLabel(selectElement) {
+      var labelElement = selectElement.parentNode.querySelector("label"); // Lấy label từ cha của select
+      labelElement.textContent = "";
+  }
+});
+//Cập nhật bảng đặt lịch hẹn - NHA SĨ
+function deleteRow(button) {
+  var row = button.parentNode.parentNode;
+  row.parentNode.removeChild(row);
+}
+
+function addNewAppointment() {
+  // Add your logic to get new appointment data
+  var client = prompt("Enter client name:");
+  var date = prompt("Enter date (YYYY-MM-DD):");
+  var time = prompt("Enter time:");
+
+  // Create a new row and append it to the table
+  var table = document.querySelector("table tbody");
+  var newRow = table.insertRow();
+  newRow.insertCell().textContent = client;
+  newRow.insertCell().textContent = date;
+  newRow.insertCell().textContent = time;
+
+  // Add a delete button to the new row
+  var deleteButton = document.createElement("button");
+  deleteButton.textContent = "Delete";
+  deleteButton.onclick = function () {
+      deleteRow(this);
+  };
+  newRow.insertCell().appendChild(deleteButton);
+}

@@ -31,6 +31,7 @@
     <!-- Template Stylesheet -->
     <link href="css/style.css" rel="stylesheet">
     <script src="server.js" defer></script>
+    
 </head>
 
 <body>
@@ -108,53 +109,63 @@
             <div class="col-12 text-center">
                 <h1 class="display-3 text-white animated zoomIn">List appointment</h1>
                 <a href="" class="h4 text-white"></a>
+                <div class="container mt-3">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="appointmentDate" class="form-label"></label>
+                            <select class="form-select" id="appointmentDate" name="appointmentDate">
+                                <!-- Add options for dates as needed -->
+                                <option value="">Appointment Date</option>
+                                <option value="2023-01-01">January 1, 2023</option>
+                                <option value="2023-01-02">January 2, 2023</option>
+                                <!-- Add other dates as needed -->
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="appointmentTime" class="form-label"></label>
+                            <select class="form-select" id="appointmentTime" name="appointmentTime">
+                                <!-- Add options for times as needed -->
+                                <option value="">Appointment Time</option>
+                                <option value="09:00">9:00 AM</option>
+                                <option value="10:00">10:00 AM</option>
+                                <!-- Add other times as needed -->
+                            </select>
+                        </div>
+                    </div>
+                </div>
                 
                 <a href="" class="h4 text-white"></a>
             </div>
         </div>
     </div>
     
-<div class="container mt-3">
-    <div class="row">
-        <div class="col-md-6">
-            <div class="input-group">
-                <input type="text" class="form-control" placeholder="Patient's Name">
-            </div>
-        </div>
-        <div class="col-md-2">
-            <button class="btn btn-primary" type="button">Search</button>
+
+    <div class="table-container">
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Client</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Sample row, you can add more rows dynamically or manually -->
+                <tr>
+                    <td>John Doe</td>
+                    <td>2023-01-01</td>
+                    <td>10:00 AM</td>
+                    <td><button onclick="deleteRow(this)">Delete</button></td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="button-container">
+            <button onclick="addNewAppointment()">Update</button>
         </div>
     </div>
-</div>
 
-
-<div class="my-5">
-<table border="1" id="medicalTable">
-    <tr>
-        <th>Name Patient</th>
-        <th>Doctor</th>
-        <th>DATE</th>
-        <th>Result</th>
-        <th></th>
-    </tr>
-    <tr>
-        <td><input type="text" name="namePatient1"></td>
-        <td><input type="text" name="doctor1"></td>
-        <td><input type="text" name="date1"></td>
-        <td><input type="text" name="result1"></td>
-        <td><button class="viewMoreBtn" onclick="viewMore(1)">View more</button></td>
-    </tr>
-    <tr>
-        <td><input type="text" name="namePatient2"></td>
-        <td><input type="text" name="doctor2"></td>
-        <td><input type="text" name="date2"></td>
-        <td><input type="text" name="result2"></td>
-        <td><button class="viewMoreBtn" onclick="viewMore(2)">View more</button></td>
-    </tr>
-    <!-- Add more rows as needed -->
-</table>
-</div>
-
+   
 
 
 
