@@ -150,9 +150,9 @@
             </thead>
             <tbody>
               <% drugList.forEach(drug => { %>
-                <tr>
+                <tr id="drug<%= drug.MaThuoc %>">
                   <td><%= drug.MaThuoc %></td>
-                  <td contenteditable="true" class="editable" data-field="TenThuoc"><%= drug.TenThuoc %></td>
+                  <td contenteditable="true" class="editable" name ="TenThuoc" data-field="TenThuoc"><%= drug.TenThuoc %></td>
                   <td contenteditable="true" class="editable" data-field="Soluongton"><%= drug.Soluongton %></td>
                   <td contenteditable="true" class="editable" data-field="Donvitinh"><%= drug.Donvitinh %></td>
                   <td contenteditable="true" class="editable" data-field="Chidinh"><%= drug.Chidinh %></td>
@@ -165,9 +165,7 @@
                       </div>
                       
                       <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
-                        <form action="/deleteDrug" method="POST">
-                          <button type="submit" class="btn btn-danger">Delete</button>
-                        </form>
+                        <button class="btn btn-danger" onclick="deleteDrug('<%= drug.MaThuoc %>')">Delete</button>
                       </div>
                   </td>
                 </tr>
@@ -295,6 +293,26 @@
           });
         });
       </script> -->
+      <script>
+        async function deleteDrug(drugId) {
+          try {
+            const response = await fetch(`/deleteDrug/${drugId}`, {
+              method: 'DELETE',
+            });
+      
+            if (response.ok) {
+              // Remove the deleted row from the HTML
+              const drugRow = document.getElementById(`drug${drugId}`);
+              drugRow.parentNode.removeChild(drugRow);
+            } else {
+              console.error('Error deleting drug:', response.statusText);
+            }
+          } catch (error) {
+            console.error('Error during drug deletion:', error);
+          }
+        }
+      </script>
+      
 </body>
 
 </html>

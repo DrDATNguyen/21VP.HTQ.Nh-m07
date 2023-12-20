@@ -157,7 +157,7 @@
                                       </div>
                                     </div></div>
                             </form>
-                                <!-- <form method="post" action="/updateDrug" enctype="application/x-www-form-urlencoded">
+                                <form method="post" action="/updateDrug" enctype="application/x-www-form-urlencoded">
                                     <div class="row g-3 p-4">
                                       <div class="col-12 col-sm-6">
                                         <input type="text" class="form-control bg-light border-0" name="nameDrug" placeholder="Name Drug" style="height: 55px;" value="<%= typeof drug !== 'undefined' ? drug.TenThuoc : '' %>">
@@ -172,11 +172,15 @@
                                         <input type="text" class="form-control bg-light border-0" name="Expiredate" placeholder="Expire date" style="height: 55px;" value="<%= typeof drug !== 'undefined' ? drug.HSD : '' %>">
                                       </div>
                                     </div>
+                                    <div class="col-12 col-sm-6">
+                                        <input type="text" class="form-control bg-light border-0" name="unit" placeholder="Expire date" style="height: 55px;" value="<%= typeof drug !== 'undefined' ? drug.Donvitinh : '' %>">
+                                      </div>
+                                    </div>
                                     <div class="col-12">
                                       <button class="btn btn-dark w-100 py-3" type="submit">Update</button>
                                     </div>
-                                  </form> -->
-                                   <form method="post" action="/updateDrug" enctype="application/x-www-form-urlencoded">
+                                  </form>
+                                   <!-- <form method="post" action="/updateDrug" enctype="application/x-www-form-urlencoded">
                                     <div class="row g-3 p-4">
                                       <div class="col-12 col-sm-6">
                                         <input type="text" class="form-control bg-light border-0" name="nameDrug" placeholder="Name Drug" style="height: 55px;" value="cc">
@@ -194,7 +198,7 @@
                                     <div class="col-12">
                                       <button class="btn btn-dark w-100 py-3" type="submit">Update</button>
                                     </div>
-                                  </form>
+                                  </form> -->
 
                     </div>
                 <!-- </div> -->

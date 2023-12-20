@@ -70,7 +70,7 @@ app.get('/', function (req, res) {
         if (err) console.log(err);
         try {
     
-            res.render('addDrug');
+            res.render('UpdateDrug');
         
           } catch (error) {
             // Xử lý lỗi nếu có
@@ -746,79 +746,108 @@ app.get('/ViewDrugList', async (req, res) => {
   }
 });
 
-app.post('/updateDrug', async (req, res) => {
+// app.post('/updateDrug', async (req, res) => {
+//   try {
+
+//     const drugId = req.body.drugId;
+//     console.log(drugId)
+//     const updatedFields = req.body.updatedFields;
+//     console.log(updatedFields)
+//     const connection = await sql.connect(config);
+//     // console.log(updatedFields.TenThuoc) 
+//     // console.log(updatedFields.Soluongton) 
+//     // console.log(updatedFields.Donvitinh) 
+//     // console.log(updatedFields.Chidinh) 
+//     console.log(updatedFields.HSD) 
+//     console.log(drugId)
+//     // Xử lý dữ liệu và thực hiện truy vấn để cập nhật thuốc
+//     const updateDrugQuery = `
+//       UPDATE Thuoc
+//       SET
+//         TenThuoc = '${updatedFields.TenThuoc}',
+//         Soluongton = '${updatedFields.Soluongton}',
+//         Donvitinh = '${updatedFields.Donvitinh}',
+//         Chidinh = '${updatedFields.Chidinh}',
+//         HSD = '${updatedFields.HSD}'
+//       WHERE MaThuoc = '${drugId}'
+//     `;
+//     const updateDrugRequest = new sql.Request();
+//     updateDrugRequest.input('maThuoc', sql.Int, drugId);
+//     updateDrugRequest.input('tenThuoc', sql.NVarChar, updatedFields.TenThuoc);
+//     updateDrugRequest.input('soLuongTon', sql.Int, updatedFields.Soluongton);
+//     updateDrugRequest.input('donViTinh', sql.NVarChar, updatedFields.Donvitinh);
+//     updateDrugRequest.input('chiDinh', sql.NVarChar, updatedFields.Chidinh);
+//     updateDrugRequest.input('hsd', sql.Date, updatedFields.HSD);
+
+//     await updateDrugRequest.query(updateDrugQuery);
+
+//     res.status(200).json({ message: 'Cập nhật thành công.' });
+//   } catch (error) {
+//     console.error('Error during drug update:', error);
+//     res.status(500).json({ error: 'Đã xảy ra lỗi trong quá trình xử lý.' });
+//   }
+// });
+
+// app.post('/deleteDrug', async (req, res) => {
+//   try {
+//     const TenThuoc = req.body.TenThuoc;
+//     console.log(TenThuoc)
+//     // Assuming you have a SQL connection configured and 'sql' library imported
+//     const connection = await sql.connect(config);
+
+//     // Add logic to delete the drug with the specified ID from the database
+//     const deleteDrugQuery = `
+//       DELETE FROM Thuoc
+//       WHERE TenThuoc = ${TenThuoc}
+//     `;
+    
+//     const deleteDrugRequest = new sql.Request();
+//     await deleteDrugRequest.query(deleteDrugQuery);
+
+//     // Send a success response
+//     res.status(200).json({ message: 'Drug deleted successfully.' });
+//   } catch (error) {
+//     console.error('Error during drug deletion:', error);
+//     res.status(500).json({ error: 'An error occurred during drug deletion.' });
+//   } finally {
+//     // Close the SQL connection
+//     await sql.close();
+//   }
+// });
+app.delete('/deleteDrug/:id', async (req, res) => {
   try {
+    const drugId = req.params.id;
 
-    const drugId = req.body.drugId;
-    console.log(drugId)
-    const updatedFields = req.body.updatedFields;
-    console.log(updatedFields)
-    const connection = await sql.connect(config);
-    // console.log(updatedFields.TenThuoc) 
-    // console.log(updatedFields.Soluongton) 
-    // console.log(updatedFields.Donvitinh) 
-    // console.log(updatedFields.Chidinh) 
-    console.log(updatedFields.HSD) 
-    console.log(drugId)
-    // Xử lý dữ liệu và thực hiện truy vấn để cập nhật thuốc
-    const updateDrugQuery = `
-      UPDATE Thuoc
-      SET
-        TenThuoc = '${updatedFields.TenThuoc}',
-        Soluongton = '${updatedFields.Soluongton}',
-        Donvitinh = '${updatedFields.Donvitinh}',
-        Chidinh = '${updatedFields.Chidinh}',
-        HSD = '${updatedFields.HSD}'
-      WHERE MaThuoc = '${drugId}'
-    `;
-    const updateDrugRequest = new sql.Request();
-    updateDrugRequest.input('maThuoc', sql.Int, drugId);
-    updateDrugRequest.input('tenThuoc', sql.NVarChar, updatedFields.TenThuoc);
-    updateDrugRequest.input('soLuongTon', sql.Int, updatedFields.Soluongton);
-    updateDrugRequest.input('donViTinh', sql.NVarChar, updatedFields.Donvitinh);
-    updateDrugRequest.input('chiDinh', sql.NVarChar, updatedFields.Chidinh);
-    updateDrugRequest.input('hsd', sql.Date, updatedFields.HSD);
-
-    await updateDrugRequest.query(updateDrugQuery);
-
-    res.status(200).json({ message: 'Cập nhật thành công.' });
-  } catch (error) {
-    console.error('Error during drug update:', error);
-    res.status(500).json({ error: 'Đã xảy ra lỗi trong quá trình xử lý.' });
-  }
-});
-
-app.post('/deleteDrug', async (req, res) => {
-  try {
-    const drugId = req.body.drugId;
-    console.log(drugId)
-    // Assuming you have a SQL connection configured and 'sql' library imported
+    // Connect to the SQL Server
     const connection = await sql.connect(config);
 
-    // Add logic to delete the drug with the specified ID from the database
+    // Perform the delete query
     const deleteDrugQuery = `
       DELETE FROM Thuoc
-      WHERE MaThuoc = ${drugId}
+      WHERE MaThuoc = '${drugId}'
     `;
-    
+
     const deleteDrugRequest = new sql.Request();
     await deleteDrugRequest.query(deleteDrugQuery);
 
-    // Send a success response
-    res.status(200).json({ message: 'Drug deleted successfully.' });
+    // Close the SQL Server connection
+    await sql.close();
+
+    // Respond with success message
+    res.status(200).json({ message: 'Delete successful.' });
   } catch (error) {
     console.error('Error during drug deletion:', error);
-    res.status(500).json({ error: 'An error occurred during drug deletion.' });
-  } finally {
-    // Close the SQL connection
-    await sql.close();
+    res.status(500).json({ error: 'An error occurred during the deletion.' });
   }
 });
 
+
+
 app.post('/search', async (req, res) => {
   try {
+    const connection = await sql.connect(config);
     const searchName = req.body.searchName;
-    console.log(searchName)
+    // console.log(searchName)
     // Perform a database query to find the drug by name
     const findDrugQuery = `
       SELECT * FROM Thuoc
@@ -845,31 +874,37 @@ app.post('/updateDrug', async (req, res) => {
   try {
     // Connect to the SQL Server
     const connection = await sql.connect(config);
+
     // Extract data from the request body
     const nameDrug = req.body.nameDrug;
     const information = req.body.Information;
     const quantity = req.body.Quantity;
     const expireDate = req.body.Expiredate;
-    // console.log('1')
-    // console.log(2)
-    // console.log(1)
-    // console.log(expireDate)
-    // Perform the update query
+    const unit = req.body.unit;
+
+    // Perform the update query with parameterized queries
     const updateDrugQuery = `
       UPDATE Thuoc
       SET
-        Chidinh = '${information}',
-        Soluongton = '${quantity}',
-        HSD = '${expireDate}'
-      WHERE TenThuoc = '${nameDrug}'
+        Chidinh = @Information,
+        Soluongton = @Quantity,
+        HSD = @Expiredate,
+        Donvitinh = @unit
+      WHERE TenThuoc = @nameDrug
     `;
 
     const updateDrugRequest = new sql.Request();
+    updateDrugRequest.input('nameDrug', sql.NVarChar, nameDrug);
+    updateDrugRequest.input('Information', sql.NVarChar, information);
+    updateDrugRequest.input('Quantity', sql.Int, quantity);
+    updateDrugRequest.input('Expiredate', sql.Date, new Date(expireDate));
+    updateDrugRequest.input('unit', sql.NVarChar, unit);
+
     await updateDrugRequest.query(updateDrugQuery);
 
     // Close the SQL Server connection
     await sql.close();
-    res.render('UpdateDrug');
+    res.redirect('/UpdateDrug');
     // Respond with success message
     // res.status(200).json({ message: 'Update successful.' });
   } catch (error) {
@@ -877,3 +912,7 @@ app.post('/updateDrug', async (req, res) => {
     res.status(500).json({ error: 'An error occurred during the update.' });
   }
 });
+ app.get('/updateDrug', (req, res) => {
+  res.render('UpdateDrug');
+
+ });
