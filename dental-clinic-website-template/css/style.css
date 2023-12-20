@@ -323,3 +323,36 @@ h6,
     width: 120px;
     height: 120px;
 }
+
+#medicalTable th {
+    background-color: #666;
+    color: #fff;
+}
+
+#medicalTable td:last-child {
+    background-color: #0077cc;
+    color: #fff;
+    text-align: center;
+    padding: 5px;
+    cursor: pointer;
+}
+
+#medicalTable td:last-child:hover {
+    background-color: #005fa3;
+}
+
+/* Additional style for 'View more' button */
+.viewMoreBtn {
+    background-color: #0077cc;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.viewMoreBtn:hover {
+    background-color: #005fa3;
+}
+.my-5 {
+    margin-top: 5rem;
+}
