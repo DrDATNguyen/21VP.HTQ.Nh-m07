@@ -58,9 +58,7 @@ const config = {
 
 // var express = require('express');
 // var app = express();
-app.get('/addAccountAD', function (req, res) {
-  res.render('addAccountAD');
-});
+
 app.get('/', function (req, res) {
    
     // var sql = require("mssql");
@@ -72,7 +70,7 @@ app.get('/', function (req, res) {
         if (err) console.log(err);
         try {
     
-            res.render('addAccountAD')
+            res.render('login');
         
           } catch (error) {
             // Xử lý lỗi nếu có
@@ -918,3 +916,119 @@ app.post('/updateDrug', async (req, res) => {
   res.render('UpdateDrug');
 
  });
+ // Assuming you have already set up your Express app and SQL connection
+
+app.post('/addAccount', async (req, res) => {
+  try {
+    const connection = await sql.connect(config);
+      const fullName = req.body.fullName;
+      const password = req.body.password;
+      const birthDate = req.body.birthDate;
+      const address = req.body.address;
+      const phoneNumber = req.body.phoneNumber;
+      const accountType = req.body.accountType;
+      console.log(fullName)
+      console.log(accountType)
+      // Perform the necessary SQL operations based on the account type
+      // Insert the data into the corresponding table (Customer, Employee, Pharmacist)
+
+      // Example SQL query for inserting into the Customer table
+      let insertQuery = '';
+
+      switch (accountType) {
+          case 'KhachHang':
+              insertQuery = `
+                  INSERT INTO KhachHang (HotenKH, Matkhau, Ngaysinh, Diachi, SDT)
+                  VALUES ('${fullName}', '${password}', '${birthDate}', '${address}', '${phoneNumber}')
+              `;
+              break;
+          case 'NhanVien':
+              insertQuery = `
+                  INSERT INTO NhanVien (HotenNV, Matkhau, Ngaysinh, Diachi, SDT)
+                  VALUES ('${fullName}', '${password}', '${birthDate}', '${address}', '${phoneNumber}')
+              `;
+              break;
+          case 'NhaSi':
+              insertQuery = `
+                  INSERT INTO NhaSi (HotenNS, Matkhau, Ngaysinh, Diachi, SDT)
+                  VALUES ('${fullName}', '${password}', '${birthDate}', '${address}', '${phoneNumber}')
+              `;
+              break;
+          default:
+              throw new Error('Invalid account type.');
+      }
+
+      // Execute the SQL query
+      const request = new sql.Request();
+      await request.query(insertQuery);
+
+      res.status(200).json({ message: 'Account added successfully.' });
+  } catch (error) {
+      console.error('Error during account creation:', error);
+      res.status(500).json({ error: 'An error occurred during account creation.' });
+  }
+});
+app.post('/viewAccounts', async (req, res) => {
+  try {
+    const connection = await sql.connect(config);
+      const accountType = req.body.accountType;
+      console.log(accountType )
+      let viewQuery = '';
+
+      switch (accountType) {
+          case 'customer':
+              viewQuery = 'SELECT HotenKH AS Name, SDT AS PhoneNumber, Matkhau AS PassWord FROM KhachHang';
+              break;
+          case 'employee':
+              viewQuery = 'SELECT HotenNV AS Name, SDT AS PhoneNumber, Matkhau AS PassWord FROM NhanVien';
+              break;
+          case 'pharmacist':
+              viewQuery = 'SELECT HotenNS AS Name, SDT AS PhoneNumber, Matkhau AS PassWord FROM NhaSi';
+              break;
+          default:
+              throw new Error('Invalid account type.');
+      }
+
+      const request = new sql.Request();
+      const result = await request.query(viewQuery);
+
+      // res.json(result.recordset);
+      res.render('ViewAccountList', { result: result.recordset });
+  } catch (error) {
+      console.error('Error during account view:', error);
+      res.status(500).json({ error: 'An error occurred during account view.' });
+  }
+});
+app.get('/ViewAccountList', (req, res) => {
+  res.render('ViewAccountList');
+
+ });
+ // Your route to handle blocking/unblocking accounts
+app.post('/blockAccount', async (req, res) => {
+  try {
+    // Extract data from the request body
+    const accountId = req.body.accountId;
+    const isBlocked = req.body.isBlocked;
+
+    // Connect to the SQL Server
+    const connection = await sql.connect(config);
+
+    // Perform the update query based on accountId and isBlocked
+    const updateQuery = `
+      UPDATE KhachHang
+      SET IsBlocked = ${isBlocked ? 1 : 0}
+      WHERE AccountId = ${accountId}
+    `;
+
+    await connection.query(updateQuery);
+
+    // Send a success response
+    res.status(200).json({ message: 'Account status updated successfully.' });
+  } catch (error) {
+    console.error('Error updating account status:', error);
+    res.status(500).json({ error: 'An error occurred while updating account status.' });
+  } finally {
+    // Close the SQL Server connection
+    await sql.close();
+  }
+});
