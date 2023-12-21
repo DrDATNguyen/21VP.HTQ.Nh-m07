@@ -1,7 +1,6 @@
 ﻿CREATE DATABASE QLIKHACHHANG
 
-USE QLIKHACHHANG
-
+USE UserDatabase
 CREATE TABLE KhachHang (
     MaKH INT PRIMARY KEY IDENTITY(1,1),
     HotenKH NVARCHAR(50) NOT NULL,
@@ -9,7 +8,19 @@ CREATE TABLE KhachHang (
     Diachi NVARCHAR(50),
     Matkhau NVARCHAR(50) NOT NULL,
     SDT INT UNIQUE NOT NULL
+	IsBlocked BIT DEFAULT 0
 );
+DECLARE @IsBlocked INT = 1; -- Replace with 0 if you want to unblock
+DECLARE @AccountId INT = 3; -- Replace with the actual AccountId
+
+-- Update the KhachHang table
+UPDATE KhachHang
+SET IsBlocked = @IsBlocked
+WHERE MaKH = @AccountId;
+
+UPDATE KhachHang
+SET Blocked = 1
+WHERE MaKH = 3;
 ALTER TABLE HeThongDatLichHen
 DROP CONSTRAINT FK_HeThongDatLichHen_KhachHang;
 
@@ -19,22 +30,24 @@ CREATE TABLE TaiKhoan (
     SDT INT,
 	PRIMARY KEY(SDT),
 );
-
+SELECT HotenKH , SDT , Matkhau FROM KhachHang
 CREATE TABLE NhanVien (
-    MaNV NVARCHAR(50),
+    MaNV  INT PRIMARY KEY IDENTITY(1,1),
     HotenNV NVARCHAR(50),
     SDT INT,
+	Ngaysinh DATE,
+    Diachi NVARCHAR(50),
     Matkhau NVARCHAR(50),
-	MaKH NVARCHAR(50),
-	PRIMARY KEY(MaNV),
+	MaKH INT,
 );
-use UserDatabase
+
 CREATE TABLE NhaSi (
     MaNS INT PRIMARY KEY IDENTITY(1,1),
     HotenNS NVARCHAR(50),
     Ngaysinh DATE,
     Diachi NVARCHAR(50),
     Matkhau NVARCHAR(50),
+	SDT INT,
 );
 INSERT INTO NhaSi (HotenNS, Ngaysinh, Diachi, Matkhau)
 VALUES 
@@ -79,8 +92,7 @@ VALUES
 CREATE TABLE QuanTriVien (
     HotenQTV NVARCHAR(50),
     MaThuoc INT,
-    MaQTV NVARCHAR(50),
-	PRIMARY KEY(MaQTV),
+    MaQTV INT PRIMARY KEY IDENTITY(1,1),
 );
 INSERT INTO QuanTriVien (HotenQTV, MaThuoc, MaQTV)
 VALUES 

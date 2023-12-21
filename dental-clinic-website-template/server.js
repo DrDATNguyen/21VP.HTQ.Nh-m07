@@ -58,7 +58,9 @@ const config = {
 
 // var express = require('express');
 // var app = express();
-
+app.get('/addAccountAD', function (req, res) {
+  res.render('addAccountAD');
+});
 app.get('/', function (req, res) {
    
     // var sql = require("mssql");
@@ -70,7 +72,7 @@ app.get('/', function (req, res) {
         if (err) console.log(err);
         try {
     
-            res.render('UpdateDrug');
+            res.render('addAccountAD')
         
           } catch (error) {
             // Xử lý lỗi nếu có
