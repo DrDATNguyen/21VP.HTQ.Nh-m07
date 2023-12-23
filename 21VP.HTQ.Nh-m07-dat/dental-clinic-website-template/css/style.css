@@ -342,38 +342,4 @@ h6,
 }
 
 /* Additional style for 'View more' button */
-.viewMoreBtn {
-    background-color: #0077cc;
-    color: #fff;
-    border: none;
-    padding: 5px 10px;
-    cursor: pointer;
-}
 
-.viewMoreBtn:hover {
-    background-color: #005fa3;
-}
-.my-5 {
-    margin-top: 5rem;
-}
-/*css bảng listapp - nha sĩ*/
-body, html {
-    height: 100%;
-    margin: 0;
-}
-
-.table-container {
-    width: 80%; /* Chiều rộng của bảng container */
-    margin: auto; /* Đưa container vào giữa trang */
-}
-
-table {
-    width: 100%; /* Chiều rộng của bảng chiếm 100% của container */
-}
-
-button-container {
-    margin-top: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}

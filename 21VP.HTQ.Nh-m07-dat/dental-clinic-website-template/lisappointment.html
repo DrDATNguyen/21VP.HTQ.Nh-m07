@@ -141,8 +141,8 @@
     
 
     <div class="table-container">
-        <table border="1">
-            <thead>
+        <table class="table" border="1">
+            <thead class="bg-light">
                 <tr>
                     <th>Client</th>
                     <th>Date</th>
@@ -150,20 +150,22 @@
                     <th>Delete</th>
                 </tr>
             </thead>
-            <tbody>
-                <!-- Sample row, you can add more rows dynamically or manually -->
+            <tbody class="table-striped">
+                <!-- Dòng mẫu, bạn có thể thêm các dòng khác một cách động hoặc thủ công -->
                 <tr>
                     <td>John Doe</td>
                     <td>2023-01-01</td>
                     <td>10:00 AM</td>
-                    <td><button onclick="deleteRow(this)">Delete</button></td>
+                    <td><button class="btn btn-danger" onclick="deleteRow(this)">Delete</button></td>
                 </tr>
             </tbody>
         </table>
         <div class="button-container">
-            <button onclick="addNewAppointment()">Update</button>
+            <button class="btn" onclick="addNewAppointment()">Update</button>
         </div>
     </div>
+    
+    
 
    
 
