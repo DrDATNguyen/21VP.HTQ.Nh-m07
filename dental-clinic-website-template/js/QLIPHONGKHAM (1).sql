@@ -1,28 +1,86 @@
 ﻿CREATE DATABASE QLIKHACHHANG
 
 USE UserDatabase
+CREATE TABLE UserRole (
+    UserId INT,
+    Role NVARCHAR(50),
+    PRIMARY KEY (UserId, Role),
+    FOREIGN KEY (UserId) REFERENCES KhachHang(MaKH) ON DELETE CASCADE
+);
+CREATE ROLE customer_role;
+CREATE ROLE employee_role;
+CREATE ROLE pharmacist_role;
+CREATE ROLE admin_role;
+CREATE USER customer_user;
+
+ALTER USER customer_user ADD TO ROLE customer_role;
+
+-- Grant permissions to the customer role/user
+GRANT SELECT ON KhachHang TO customer_role;
+GRANT SELECT ON HoSoBenhAn TO customer_role;
+GRANT SELECT ON HeThongDatLichHen TO customer_role;
+GRANT SELECT ON LichLamViec TO customer_role;
+GRANT SELECT ON NhaSi TO customer_role;
+
+-- Grant permissions to the employee role/user
+GRANT SELECT, INSERT, UPDATE, DELETE ON KhachHang TO employee_role;
+GRANT SELECT ON HoSoBenhAn TO employee_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON HeThongDatLichHen TO employee_role;
+GRANT SELECT ON LichLamViec TO employee_role;
+GRANT SELECT ON NhaSi TO employee_role;
+--GRANT SELECT, INSERT, UPDATE, DELETE ON ThanhToan TO employee_role;
+
+-- Grant permissions to the pharmacist role/user
+GRANT SELECT, INSERT, UPDATE, DELETE ON HeThongDatLichHen TO pharmacist_role;
+GRANT SELECT ON LichLamViec TO pharmacist_role;
+GRANT SELECT ON NhaSi TO pharmacist_role;
+GRANT SELECT ON HoSoBenhAn TO pharmacist_role;
+GRANT SELECT ON Thuoc TO pharmacist_role;
+
+-- Grant permissions to the admin role/user
+GRANT SELECT ON Thuoc TO admin_role;
+GRANT SELECT ON NhanVien TO admin_role;
+GRANT SELECT ON NhaSi TO admin_role;
+GRANT SELECT ON KhachHang TO admin_role;
+
+-- Create users
+CREATE USER customer_user FOR LOGIN customer_user;
+CREATE USER employee_user FOR LOGIN employee_user;
+CREATE USER pharmacist_user FOR LOGIN pharmacist_user;
+
+-- Grant permissions to the customer user
+GRANT SELECT ON KhachHang TO customer_user;
+GRANT SELECT ON HoSoBenhAn TO customer_user;
+-- Grant other necessary permissions
+
+-- Grant permissions to the employee user
+GRANT SELECT, INSERT, UPDATE, DELETE ON KhachHang TO employee_user;
+GRANT SELECT, INSERT, UPDATE, DELETE ON HoSoBenhAn TO employee_user;
+-- Grant other necessary permissions
+
+-- Grant permissions to the pharmacist user
+GRANT SELECT, INSERT, UPDATE, DELETE ON HeThongDatLichHen TO pharmacist_user;
+GRANT SELECT, INSERT, UPDATE, DELETE ON LichLamViec TO pharmacist_user;
+-- Grant other necessary permissions
+
+-- Add roles to users if needed
+ALTER ROLE customer_role ADD MEMBER customer_user;
+ALTER ROLE employee_role ADD MEMBER employee_user;
+ALTER ROLE pharmacist_role ADD MEMBER pharmacist_user;
+
+
+
 CREATE TABLE KhachHang (
     MaKH INT PRIMARY KEY IDENTITY(1,1),
     HotenKH NVARCHAR(50) NOT NULL,
     Ngaysinh DATE,
     Diachi NVARCHAR(50),
     Matkhau NVARCHAR(50) NOT NULL,
-    SDT INT UNIQUE NOT NULL
+    SDT INT UNIQUE NOT NULL,
 	IsBlocked BIT DEFAULT 0
 );
-DECLARE @IsBlocked INT = 1; -- Replace with 0 if you want to unblock
-DECLARE @AccountId INT = 3; -- Replace with the actual AccountId
 
--- Update the KhachHang table
-UPDATE KhachHang
-SET IsBlocked = @IsBlocked
-WHERE MaKH = @AccountId;
 
-UPDATE KhachHang
-SET Blocked = 1
-WHERE MaKH = 3;
-ALTER TABLE HeThongDatLichHen
-DROP CONSTRAINT FK_HeThongDatLichHen_KhachHang;
 
 CREATE TABLE TaiKhoan (
     MaKH INT ,
@@ -30,7 +88,7 @@ CREATE TABLE TaiKhoan (
     SDT INT,
 	PRIMARY KEY(SDT),
 );
-SELECT HotenKH , SDT , Matkhau FROM KhachHang
+
 CREATE TABLE NhanVien (
     MaNV  INT PRIMARY KEY IDENTITY(1,1),
     HotenNV NVARCHAR(50),
@@ -39,8 +97,13 @@ CREATE TABLE NhanVien (
     Diachi NVARCHAR(50),
     Matkhau NVARCHAR(50),
 	MaKH INT,
+	IsBlocked BIT DEFAULT 0
 );
-
+INSERT INTO NhaSi(HotenNS, Ngaysinh, Diachi, Matkhau,SDT)
+VALUES 
+  ('Khang Ngo', '2003-01-01', 'Lam Dong', '1',123),
+  ('Dat G', '2003-09-21', 'Cu Chi', '2',1234),
+  ('Nghia L', '2003-12-12', 'Lam Dong', '3',12345);
 CREATE TABLE NhaSi (
     MaNS INT PRIMARY KEY IDENTITY(1,1),
     HotenNS NVARCHAR(50),
@@ -48,12 +111,13 @@ CREATE TABLE NhaSi (
     Diachi NVARCHAR(50),
     Matkhau NVARCHAR(50),
 	SDT INT,
+	IsBlocked BIT DEFAULT 0
 );
 INSERT INTO NhaSi (HotenNS, Ngaysinh, Diachi, Matkhau)
 VALUES 
-  ('Doctor 1', '1990-01-01', 'Address 1', 'password1'),
-  ('Doctor 2', '1985-05-15', 'Address 2', 'password2'),
-  ('Doctor 3', '1980-10-10', 'Address 3', 'password3');
+  ('Khang Ngo', '2003-01-01', 'Lam Dong', '1'),
+  ('Dat G', '2003-09-21', 'Cu Chi', '2'),
+  ('Nghia L', '2003-12-12', 'Lam Dong', '3');
 CREATE TABLE HoSoBenhNhan (
     MaKH INT,
     HotenBN NVARCHAR(50),
@@ -74,7 +138,6 @@ CREATE TABLE HoSoBenhAn (
 	 HotenNS NVARCHAR(50) NOT NULL,
     Ngaysinh DATE,
     Diachi NVARCHAR(50),
-
     SDT INT UNIQUE NOT NULL
 	--PRIMARY KEY(MaBA, MaKH, MaNS),
 );
@@ -121,7 +184,8 @@ CREATE TABLE HeThongDatLichHen (
     Ngaysinh DATE,
     Diachi NVARCHAR(50),
     SDT INT,
-    MaKH INT,
+	MaKH INT,
+	MaDV INT,
 	PRIMARY KEY(MaNS, MaKH),
 );
 
@@ -134,16 +198,26 @@ SELECT * FROM LichLamViec
         WHERE MaNS = 1 AND Thoigiantrong = '2022-12-21T21:15:00'
 INSERT INTO LichLamViec (Thoigiantrong, MaNS)
 VALUES ('2022-12-21T21:15:00', 1); -- Thay thế 1 bằng giá trị thực của MaNS
+
 ALTER TABLE HeThongDatLichHen
 ALTER COLUMN  Ngaygio DATETIME;
+
+ALTER TABLE  TaiKhoan
+DROP CONSTRAINT FK_TaiKhoan_KhachHang;
+
 ALTER TABLE TaiKhoan
 ADD CONSTRAINT FK_TaiKhoan_KhachHang
 FOREIGN KEY (MaKH) REFERENCES KhachHang(MaKH);
+
+ALTER TABLE  HoSoBenhNhan
+DROP CONSTRAINT FK_HoSoBenhNhan_KhachHang;
 
 ALTER TABLE HoSoBenhNhan
 ADD CONSTRAINT FK_HoSoBenhNhan_KhachHang
 FOREIGN KEY (MaKH) REFERENCES KhachHang(MaKH);
 
+ALTER TABLE  HoSoBenhNhan
+DROP CONSTRAINT FK_HoSoBenhNhan_NhaSi;
 
 ALTER TABLE HoSoBenhNhan
 ADD CONSTRAINT FK_HoSoBenhNhan_NhaSi
@@ -151,26 +225,38 @@ FOREIGN KEY (MaNS) REFERENCES NhaSi(MaNS);
 
 ALTER TABLE  HoSoBenhNhan
 DROP CONSTRAINT FK_HoSoBenhNhan_HoSoBenhAn;
+
 ALTER TABLE HoSoBenhNhan
 ADD CONSTRAINT FK_HoSoBenhNhan_HoSoBenhAn
 FOREIGN KEY (MaBA) REFERENCES HoSoBenhAn(MaBA);
+
 ALTER TABLE  HoSoBenhAn
 DROP CONSTRAINT FK_HoSoBenhAn_KhachHang;
+
+ALTER TABLE  HoSoBenhAn
+DROP CONSTRAINT FK_HoSoBenhAn_KhachHang;
+
 ALTER TABLE HoSoBenhAn
 ADD CONSTRAINT FK_HoSoBenhAn_KhachHang
 FOREIGN KEY (MaKH) REFERENCES KhachHang(MaKH);
+
 ALTER TABLE  HoSoBenhAn
 DROP CONSTRAINT FK_HoSoBenhAn_NhaSi;
+
 ALTER TABLE HoSoBenhAn
 ADD CONSTRAINT FK_HoSoBenhAn_NhaSi
-FOREIGN KEY (MaNS) REFERENCES NhaSi(MaNS);
+FOREIGN KEY (MaNS) REFERENCES NhaSi(MaNS)
+;
 ALTER TABLE  HoSoBenhAn
 DROP CONSTRAINT FK_HoSoBenhAn_Thuoc;
+
 ALTER TABLE HoSoBenhAn
 ADD CONSTRAINT FK_HoSoBenhAn_Thuoc
 FOREIGN KEY (MaThuoc) REFERENCES Thuoc(MaThuoc);
+
 ALTER TABLE  HoSoBenhAn
 DROP CONSTRAINT FK_HoSoBenhAn_DichVu;
+
 ALTER TABLE HoSoBenhAn
 ADD CONSTRAINT FK_HoSoBenhAn_DichVu
 FOREIGN KEY (MaDV) REFERENCES DichVu(MaDV); 
@@ -179,12 +265,16 @@ ALTER TABLE QuanTriVien
 ADD CONSTRAINT FK_QuanTriVien_Thuoc
 FOREIGN KEY (MaThuoc) REFERENCES Thuoc(MaThuoc);
 
+ALTER TABLE  HeThongDatLichHen
+DROP CONSTRAINT FK_HeThongDatLichHen_KhachHang;
+
 ALTER TABLE HeThongDatLichHen
 ADD CONSTRAINT FK_HeThongDatLichHen_KhachHang
 FOREIGN KEY (MaKH) REFERENCES KhachHang(MaKH);
 
 ALTER TABLE  LichLamViec
 DROP CONSTRAINT FK_LichLamViec_NhaSi;
+
 ALTER TABLE LichLamViec
 ADD CONSTRAINT FK_LichLamViec_NhaSi
 FOREIGN KEY (MaNS) REFERENCES NhaSi(MaNS);
