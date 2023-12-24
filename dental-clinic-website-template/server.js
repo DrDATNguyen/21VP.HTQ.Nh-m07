@@ -593,6 +593,18 @@ async function getMaKHBySDT(SDT) {
       return null; // Trả về null nếu không tìm thấy MaKH cho SDT
   }
 }
+async function getHotenKHByMaKH(MaKH) {
+  const query = `SELECT HotenKH FROM KhachHang WHERE MaKH = '${MaKH}'`;
+  const request = new sql.Request();
+  request.input('MaKH', sql.Int, MaKH);
+  const result = await request.query(query);
+
+  if (result.recordset.length > 0) {
+      return result.recordset[0].HotenKH;
+  } else {
+      return null; // Trả về null nếu không tìm thấy MaKH cho SDT
+  }
+}
 // app.get('/profile', async (req, res) => {
 //   try {
 //     // Lấy MaKH từ session
@@ -1154,6 +1166,26 @@ app.get('/viewMedicalRecords', async (req, res) => {
 
       const result = await connection.query(query);
 
+      res.render('viewMedicalRecords', { result: result.recordset });
+  } catch (error) {
+      console.error('Error fetching medical records:', error);
+      res.status(500).json({ error: 'An error occurred while fetching medical records.' });
+  } finally {
+      await sql.close();
+  }
+});
+app.get('/viewMedicalRecordUser', async (req, res) => {
+  try {
+      const connection = await sql.connect(config);
+      const MaKH = req.session.MaKH
+      const HotenKH = await getHotenKHByMaKH(MaKH)
+      console.log(MaKH) 
+      console.log(HotenKH)
+      // Adjust the query according to your table structure
+      const query = `SELECT * FROM HoSoBenhAn WHERE HotenKH = '${HotenKH}'`;
+
+      const result = await connection.query(query);
+      console.log(result.recordset.MaBA)
       res.render('viewMedicalRecords', { result: result.recordset });
   } catch (error) {
       console.error('Error fetching medical records:', error);
