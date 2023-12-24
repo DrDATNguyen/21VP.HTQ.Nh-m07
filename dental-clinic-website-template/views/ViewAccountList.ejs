@@ -125,7 +125,7 @@
     <div class="container-fluid bg-primary py-5 hero-header mb-5">
         <div class="row py-3">
             <div class="col-12 text-center">
-                <h1 class="display-3 text-white animated zoomIn">Add Drug</h1>
+                <h1 class="display-3 text-white animated zoomIn"> View Account List</h1>
                 <a href="" class="h4 text-white">Home</a>
                 <i class="far fa-circle text-white px-2"></i>
                 <a href="" class="h4 text-white">Appointment</a>
@@ -267,7 +267,7 @@
     <script src="/main.js"></script>
       <!-- Định nghĩa hàm formatDate -->
       <!-- Trong tệp EJS -->
-      <script>
+      <!-- <script>
         document.addEventListener('DOMContentLoaded', () => {
           const toggleSwitches = document.querySelectorAll('.form-check-input');
       
@@ -294,7 +294,57 @@
             });
           });
         });
-      </script>
+      </script> -->
+      <!-- ... your existing table code ... -->
+
+<!-- <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggleSwitches = document.querySelectorAll('.form-check-input');
+
+        toggleSwitches.forEach(switchElement => {
+            switchElement.addEventListener('change', async function () {
+                const accountId = this.dataset.accountId;
+                const isBlocked = this.checked;
+
+                try {
+                    const response = await fetch(`/blockAccount/${accountId}/${isBlocked}`, {
+                        method: 'POST',
+                    });
+
+                    if (!response.ok) {
+                        console.error('Error updating account status');
+                    }
+                } catch (error) {
+                    console.error('Error updating account status:', error);
+                }
+            });
+        });
+    });
+</script> -->
+
+<!-- ... your existing table code ... -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const checkboxes = document.querySelectorAll('.form-check-input');
+
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', async function () {
+                const accountId = this.getAttribute('data-account-id');
+                const isBlocked = this.checked ? 1 : 0;
+                const accountType = document.getElementById('accountType').value;
+
+                // Call your server-side endpoint to update IsBlocked status
+                const response = await fetch(`/blockAccount/${accountType}/${accountId}/${isBlocked}`, {
+                    method: 'POST',
+                });
+
+                // Handle the response if needed
+                const data = await response.json();
+                console.log(data);
+            });
+        });
+    });
+</script>
     
       
 </body>

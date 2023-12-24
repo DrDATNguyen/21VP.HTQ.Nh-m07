@@ -9,7 +9,7 @@
     <meta content="Free HTML Templates" name="description">
 
     <!-- Favicon -->
-    <link href="/favicon.ico" rel="icon">
+    <link href="img/favicon.ico" rel="icon">
 
     <!-- Google Web Fonts -->
     <link rel="preconnect" href="https://fonts.gstatic.com">
@@ -82,7 +82,7 @@
         <div class="collapse navbar-collapse" id="navbarCollapse">
             <div class="navbar-nav ms-auto py-0">
                 <a href="index.html" class="nav-item nav-link">Home</a>
-                <a href="profile" class="nav-item nav-link">Profile</a>
+                <a href="about.html" class="nav-item nav-link">About</a>
                 <a href="service.html" class="nav-item nav-link">Service</a>
                 <div class="nav-item dropdown">
                     <a href="#" class="nav-link dropdown-toggle active" data-bs-toggle="dropdown">Pages</a>
@@ -125,7 +125,7 @@
     <div class="container-fluid bg-primary py-5 hero-header mb-5">
         <div class="row py-3">
             <div class="col-12 text-center">
-                <h1 class="display-3 text-white animated zoomIn">Appointment</h1>
+                <h1 class="display-3 text-white animated zoomIn">Add Account</h1>
                 <a href="" class="h4 text-white">Home</a>
                 <i class="far fa-circle text-white px-2"></i>
                 <a href="" class="h4 text-white">Appointment</a>
@@ -139,56 +139,76 @@
     <div class="container-fluid bg-primary bg-appointment mb-5 wow fadeInUp" data-wow-delay="0.1s" style="margin-top: 90px;">
         <div class="container">
             <div class="row gx-5">
-                <div class="col-lg-6 py-5">
+                <!-- <div class="col-lg-6 py-5">
                     <div class="py-5">
                         <h1 class="display-5 text-white mb-4">We Are A Certified and Award Winning Dental Clinic You Can Trust</h1>
                         <p class="text-white mb-0">Eirmod sed tempor lorem ut dolores. Aliquyam sit sadipscing kasd ipsum. Dolor ea et dolore et at sea ea at dolor, justo ipsum duo rebum sea invidunt voluptua. Eos vero eos vero ea et dolore eirmod et. Dolores diam duo invidunt lorem. Elitr ut dolores magna sit. Sea dolore sanctus sed et. Takimata takimata sanctus sed.</p>
                     </div>
-                </div>
-                <div class="col-lg-6">
+                </div> -->
+                <!-- <div class="col-lg-6 py-5 px-100"> -->
                     <div class="appointment-form h-100 d-flex flex-column justify-content-center text-center p-5 wow zoomIn" data-wow-delay="0.6s">
-                        <h1 class="text-white mb-4">Make Appointment</h1>
-                        <form action="/appointment" method="post">
+                        <h1 class="text-white mb-4">Add Account</h1>
+                        <form method="post" action="/RegisterMedicalRecords">
                             <div class="row g-3">
-                                <div class="col-12 col-sm-6">
-                                    <select name="selectedService" class="form-select bg-light border-0" style="height: 55px;">
+                                <!-- <div class="col-12 col-sm-6">
+                                    <select class="form-select bg-light border-0" style="height: 55px;">
                                         <option selected>Select A Service</option>
-                                        <!-- Options will be dynamically added here -->
+                                        <option value="1">Service 1</option>
+                                        <option value="2">Service 2</option>
+                                        <option value="3">Service 3</option>
                                     </select>
                                 </div>
                                 <div class="col-12 col-sm-6">
-                                    <select name="selectedDoctor" class="form-select bg-light border-0" style="height: 55px;">
-                                        <option selected disabled>Select Doctor</option>
-                                        <!-- Options will be dynamically added here -->
+                                    <select class="form-select bg-light border-0" style="height: 55px;">
+                                        <option selected>Select Doctor</option>
+                                        <option value="1">Doctor 1</option>
+                                        <option value="2">Doctor 2</option>
+                                        <option value="3">Doctor 3</option>
                                     </select>
+                                </div> -->
+                                <div class="col-12 col-sm-6">
+                                    <input type="text" class="form-control bg-light border-0" name="fullName" placeholder="Patient Name " required>
                                 </div>
                                 <div class="col-12 col-sm-6">
-                                    <input type="text" name = "fullname" class="form-control bg-light border-0" placeholder="Your Name" style="height: 55px;">
+                                    <input type="gender" class="form-control bg-light border-0" name="nameDoctor" placeholder="Name Doctor" required>
                                 </div>
                                 <div class="col-12 col-sm-6">
-                                    <input name="SDT" class="form-control bg-light border-0" placeholder="Your PhoneNumber" style="height: 55px;">
+                                    <input type="phone number" class="form-control bg-light border-0" name="clinicDate" placeholder="Clinic Date " required>
                                 </div>
                                 <div class="col-12 col-sm-6">
-                                    <div class="date" id="date" data-target-input="nearest">
-                                        <input type="text" name = "date" 
-                                            class="form-control bg-light border-0 datetimepicker-input"
-                                            placeholder="Appointment Date" data-target="#date1" data-toggle="datetimepicker" style="height: 55px;">
+                                    <input type="adress" class="form-control bg-light border-0" name="dosageUsed" placeholder="Dosage Used" required>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <input type="gender" class="form-control bg-light border-0" name="listDrugs" placeholder="List of drugs" required>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <input type="adress" class="form-control bg-light border-0" name="birthDate" placeholder="birthDate" required>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <input type="gender" class="form-control bg-light border-0" name="address" placeholder="address" required>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <input type="gender" class="form-control bg-light border-0" name="phoneNumber" placeholder="phoneNumber" required>
+                                </div>
+                                <div class="col-1">
+                                    <label for="accountType">Choosing Treatments:</label>
+                                    <div class="dropdown checkbox-dropdown">
+                                        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            Select Services
+                                        </button>
+                                        <div class="dropdown-menu" name="serviceType" aria-labelledby="dropdownMenuButton" id="servicesDropdown">
+                                            <!-- Options will be dynamically added here -->
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="col-12 col-sm-6">
-                                    <div class="time" id="time" data-target-input="nearest">
-                                        <input type="text"name = "time" 
-                                            class="form-control bg-light border-0 datetimepicker-input"
-                                            placeholder="Appointment Time" data-target="#time1" data-toggle="datetimepicker" style="height: 55px;">
-                                    </div>
-                                </div>
+                                
                                 <div class="col-12">
-                                    <button class="btn btn-dark w-100 py-3" type="submit">Make Appointment</button>
+                                    <button class="btn btn-dark w-100 py-3" type="submit">Add</button>
                                 </div>
                             </div>
                         </form>
                     </div>
-                </div>
+                <!-- </div> -->
             </div>
         </div>
     </div>
@@ -288,33 +308,32 @@
     <!-- Template Javascript -->
     <script src="/main.js"></script>
     <script>
-        // Fetch data from the server and populate the dropdowns
-        document.addEventListener('DOMContentLoaded', function () {
-            fetch('/getServicesAndDoctors') // Adjust the endpoint based on your server route
-                .then(response => response.json())
-                .then(data => {
-                    const serviceDropdown = document.querySelector('[name="selectedService"]');
-                    const doctorDropdown = document.querySelector('[name="selectedDoctor"]');
-    
-                    // Populate service dropdown
-                    data.services.forEach(service => {
-                        const option = document.createElement('option');
-                        option.value = service.MaDV; // Assuming MaDV is the unique identifier for services
-                        option.textContent = service.TenDV;
-                        serviceDropdown.appendChild(option);
+        $(document).ready(function () {
+            // Fetch services data from the server
+            $.ajax({
+                url: '/getServices',
+                method: 'GET',
+                success: function (data) {
+                    // Populate the dropdown with fetched data
+                    const dropdown = $('#servicesDropdown');
+                    data.forEach(service => {
+                        const option = `<div class="form-check">
+                                            <input type="checkbox" class="form-check-input" id="${service.MaDV}" name="serviceType" value="${service.TenDV}">
+                                            <label class="form-check-label" for="${service.MaDV}">${service.TenDV}</label>
+                                        </div>`;
+                        dropdown.append(option);
                     });
-    
-                    // Populate doctor dropdown
-                    data.doctors.forEach(doctor => {
-                        const option = document.createElement('option');
-                        option.value = doctor.MaNS; // Assuming MaNS is the unique identifier for doctors
-                        option.textContent = doctor.HotenNS;
-                        doctorDropdown.appendChild(option);
-                    });
-                })
-                .catch(error => console.error('Error fetching data:', error));
+                },
+                error: function (error) {
+                    console.error('Error fetching services:', error);
+                }
+            });
         });
+        
+        
     </script>
+    
+    
 </body>
 
 </html>

@@ -9,7 +9,7 @@
     <meta content="Free HTML Templates" name="description">
 
     <!-- Favicon -->
-    <link href="/favicon.ico" rel="icon">
+    <link href="img/favicon.ico" rel="icon">
 
     <!-- Google Web Fonts -->
     <link rel="preconnect" href="https://fonts.gstatic.com">
@@ -20,10 +20,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
 
     <!-- Libraries Stylesheet -->
-    <link href="lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
-    <link href="lib/animate/animate.min.css" rel="stylesheet">
-    <link href="lib/tempusdominus/css/tempusdominus-bootstrap-4.min.css" rel="stylesheet" />
-    <link href="lib/twentytwenty/twentytwenty.css" rel="stylesheet" />
+    <link href="/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
+    <link href="/animate/animate.min.css" rel="stylesheet">
+    <link href="/tempusdominus/css/tempusdominus-bootstrap-4.min.css" rel="stylesheet" />
+    <link href="/twentytwenty/twentytwenty.css" rel="stylesheet" />
 
     <!-- Customized Bootstrap Stylesheet -->
     <link href="/bootstrap.min.css" rel="stylesheet">
@@ -82,7 +82,7 @@
         <div class="collapse navbar-collapse" id="navbarCollapse">
             <div class="navbar-nav ms-auto py-0">
                 <a href="index.html" class="nav-item nav-link">Home</a>
-                <a href="profile" class="nav-item nav-link">Profile</a>
+                <a href="about.html" class="nav-item nav-link">About</a>
                 <a href="service.html" class="nav-item nav-link">Service</a>
                 <div class="nav-item dropdown">
                     <a href="#" class="nav-link dropdown-toggle active" data-bs-toggle="dropdown">Pages</a>
@@ -125,7 +125,7 @@
     <div class="container-fluid bg-primary py-5 hero-header mb-5">
         <div class="row py-3">
             <div class="col-12 text-center">
-                <h1 class="display-3 text-white animated zoomIn">Appointment</h1>
+                <h1 class="display-3 text-white animated zoomIn">View Medical Records</h1>
                 <a href="" class="h4 text-white">Home</a>
                 <i class="far fa-circle text-white px-2"></i>
                 <a href="" class="h4 text-white">Appointment</a>
@@ -133,85 +133,54 @@
         </div>
     </div>
     <!-- Hero End -->
-
-
-    <!-- Appointment Start -->
-    <div class="container-fluid bg-primary bg-appointment mb-5 wow fadeInUp" data-wow-delay="0.1s" style="margin-top: 90px;">
-        <div class="container">
-            <div class="row gx-5">
-                <div class="col-lg-6 py-5">
-                    <div class="py-5">
-                        <h1 class="display-5 text-white mb-4">We Are A Certified and Award Winning Dental Clinic You Can Trust</h1>
-                        <p class="text-white mb-0">Eirmod sed tempor lorem ut dolores. Aliquyam sit sadipscing kasd ipsum. Dolor ea et dolore et at sea ea at dolor, justo ipsum duo rebum sea invidunt voluptua. Eos vero eos vero ea et dolore eirmod et. Dolores diam duo invidunt lorem. Elitr ut dolores magna sit. Sea dolore sanctus sed et. Takimata takimata sanctus sed.</p>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="appointment-form h-100 d-flex flex-column justify-content-center text-center p-5 wow zoomIn" data-wow-delay="0.6s">
-                        <h1 class="text-white mb-4">Make Appointment</h1>
-                        <form action="/appointment" method="post">
-                            <div class="row g-3">
-                                <div class="col-12 col-sm-6">
-                                    <select name="selectedService" class="form-select bg-light border-0" style="height: 55px;">
-                                        <option selected>Select A Service</option>
-                                        <!-- Options will be dynamically added here -->
-                                    </select>
-                                </div>
-                                <div class="col-12 col-sm-6">
-                                    <select name="selectedDoctor" class="form-select bg-light border-0" style="height: 55px;">
-                                        <option selected disabled>Select Doctor</option>
-                                        <!-- Options will be dynamically added here -->
-                                    </select>
-                                </div>
-                                <div class="col-12 col-sm-6">
-                                    <input type="text" name = "fullname" class="form-control bg-light border-0" placeholder="Your Name" style="height: 55px;">
-                                </div>
-                                <div class="col-12 col-sm-6">
-                                    <input name="SDT" class="form-control bg-light border-0" placeholder="Your PhoneNumber" style="height: 55px;">
-                                </div>
-                                <div class="col-12 col-sm-6">
-                                    <div class="date" id="date" data-target-input="nearest">
-                                        <input type="text" name = "date" 
-                                            class="form-control bg-light border-0 datetimepicker-input"
-                                            placeholder="Appointment Date" data-target="#date1" data-toggle="datetimepicker" style="height: 55px;">
-                                    </div>
-                                </div>
-                                <div class="col-12 col-sm-6">
-                                    <div class="time" id="time" data-target-input="nearest">
-                                        <input type="text"name = "time" 
-                                            class="form-control bg-light border-0 datetimepicker-input"
-                                            placeholder="Appointment Time" data-target="#time1" data-toggle="datetimepicker" style="height: 55px;">
-                                    </div>
-                                </div>
-                                <div class="col-12">
-                                    <button class="btn btn-dark w-100 py-3" type="submit">Make Appointment</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="container-fluid mt-5">
+        <table class="table table-bordered" id="accountTable">
+            <thead>
+                <tr>
+                    <th>Mã bệnh án</th>
+                    <th>Họ tên KH</th>
+                    <th>Họ tên NS</th>
+                    <th>Triệu chứng</th>
+                    <th>Ngày khám</th>
+                    <th>Liều sử dụng</th>
+                    <th>Danh sách thuốc</th>
+                    <th>Danh sách dịch vụ</th>
+                    
+                    <th>Ngày sinh</th>
+                    <th>Dịa chỉ</th>
+                    <th>SDT</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (typeof result !== 'undefined' && result.length > 0) { %>
+                    <% result.forEach(record => { %>
+                        <tr>
+                            <td><%= record.MaBA %></td>
+                            <td><%= record.HotenKH %></td>
+                            <td><%= record.HotenNS %></td>
+                            <td><%= record.Trieuchung %></td>
+                            <td><%= record.Ngaykham %></td>
+                            <td><%= record.Lieusudung %></td>
+                            <td><%= record.DSThuoc %></td>
+                            <td><%= record.DSDichvu %></td>
+                            <td><%= record.Ngaysinh %></td>
+                            <td><%= record.Diachi %></td>
+                            <td><%= record.SDT %></td>
+                        </tr>
+                    <% }); %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="10">No medical records found.</td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
     </div>
-    <!-- Appointment End -->
     
 
-    <!-- Newsletter Start -->
-    <div class="container-fluid position-relative pt-5 wow fadeInUp" data-wow-delay="0.1s" style="z-index: 1;">
-        <div class="container">
-            <div class="bg-primary p-5">
-                <form class="mx-auto" style="max-width: 600px;">
-                    <div class="input-group">
-                        <input type="text" class="form-control border-white p-3" placeholder="Your Email">
-                        <button class="btn btn-dark px-4">Sign Up</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    <!-- Newsletter End -->
     
-
-    <!-- Footer Start -->
+<!-- 
+    
     <div class="container-fluid bg-dark text-light py-5 wow fadeInUp" data-wow-delay="0.3s" style="margin-top: -75px;">
         <div class="container pt-5">
             <div class="row g-5 pt-4">
@@ -264,7 +233,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> -->
     <!-- Footer End -->
 
 
@@ -287,34 +256,38 @@
 
     <!-- Template Javascript -->
     <script src="/main.js"></script>
-    <script>
-        // Fetch data from the server and populate the dropdowns
-        document.addEventListener('DOMContentLoaded', function () {
-            fetch('/getServicesAndDoctors') // Adjust the endpoint based on your server route
-                .then(response => response.json())
-                .then(data => {
-                    const serviceDropdown = document.querySelector('[name="selectedService"]');
-                    const doctorDropdown = document.querySelector('[name="selectedDoctor"]');
-    
-                    // Populate service dropdown
-                    data.services.forEach(service => {
-                        const option = document.createElement('option');
-                        option.value = service.MaDV; // Assuming MaDV is the unique identifier for services
-                        option.textContent = service.TenDV;
-                        serviceDropdown.appendChild(option);
-                    });
-    
-                    // Populate doctor dropdown
-                    data.doctors.forEach(doctor => {
-                        const option = document.createElement('option');
-                        option.value = doctor.MaNS; // Assuming MaNS is the unique identifier for doctors
-                        option.textContent = doctor.HotenNS;
-                        doctorDropdown.appendChild(option);
-                    });
-                })
-                .catch(error => console.error('Error fetching data:', error));
+      <!-- Định nghĩa hàm formatDate -->
+      <!-- Trong tệp EJS -->
+      <script>
+        document.addEventListener('DOMContentLoaded', () => {
+          const toggleSwitches = document.querySelectorAll('.form-check-input');
+      
+          toggleSwitches.forEach(switchElement => {
+            switchElement.addEventListener('change', async () => {
+              const accountId = switchElement.dataset.accountId;
+              const isBlocked = switchElement.checked;
+      
+              // Perform the update based on the accountId and isBlocked values
+              await fetch('/blockAccount', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  accountId,
+                  isBlocked,
+                }),
+              });
+      
+              // Update the label text
+              const label = switchElement.nextElementSibling;
+              label.innerText = isBlocked ? 'Blocked' : 'Active';
+            });
+          });
         });
-    </script>
+      </script>
+    
+      
 </body>
 
 </html>

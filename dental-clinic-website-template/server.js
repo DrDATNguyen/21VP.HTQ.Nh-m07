@@ -19,6 +19,7 @@ var flash = require('connect-flash');
 const app = express();
 const bodyParser = require('body-parser');
 const path = require('path');
+const { CONNREFUSED } = require('dns');
 app.use(session({
   secret: 'your-secret-key',
   resave: false,
@@ -488,15 +489,22 @@ app.post('/appointment', async (req, res) => {
 
     // Lấy thông tin từ body của request
     const SDT = parseInt(req.body.SDT, 10);
-    const tenNS = req.body.selectedDoctor; // Tên nha sĩ từ người dùng
+    const MaDV = req.body.selectedService;
+    const maNS = req.body.selectedDoctor; // Tên nha sĩ từ người dùng
     const ngay = req.body.date;
+    const HotenKH = req.body.fullname;
     const gio = req.body.time;
     const ngayGio = `${ngay.split('/').reverse().join('-')}T${gio}:00`;
     console.log(SDT);
-    console.log(tenNS);
+    // console.log(tenNS);
     console.log(ngay);
     console.log(gio);
     console.log(ngayGio);
+    console.log(MaDV);
+    console.log(maNS);
+    console.log(HotenKH);
+
+
     // Check if required fields are present
     // if (isNaN(SDT) || !tenNS || !ngayGio || !req.body.HotenKH || !req.body.Ngaysinh || !req.body.DiaChi) {
     //   return res.status(400).json({ error: 'Invalid or missing fields in the request.' });
@@ -510,7 +518,7 @@ app.post('/appointment', async (req, res) => {
     }
 
     // Lấy MaNS từ tên nha sĩ
-    const maNS = await getMaNSByTenNS(tenNS);
+    //  const maKH = await getMaNSByTenNS(HotenKH);
     console.log(maNS);
     if (!maNS) {
       return res.status(400).json({ error: 'Nha sĩ không tồn tại.' });
@@ -532,18 +540,20 @@ app.post('/appointment', async (req, res) => {
 
     // Thực hiện truy vấn để đặt lịch hẹn mới
     const insertAppointmentQuery = `
-        INSERT INTO HeThongDatLichHen (MaNS, HotenKH, Ngaygio, Ngaysinh, DiaChi, SDT, MaKH)
-        VALUES (@maNS, @hotenKH, @ngayGio, @ngaySinh, @diaChi, @SDT, @maKH)
+        INSERT INTO HeThongDatLichHen (MaNS, HotenKH, Ngaygio, Ngaysinh, DiaChi, SDT, MaKH,MaDV)
+        VALUES (@maNS, @HotenKH, @ngayGio, @ngaySinh, @diaChi, @SDT, @maKH,@MaDV)
     `;
     
     const insertAppointmentRequest = new sql.Request();
     insertAppointmentRequest.input('maNS', sql.Int, maNS);
-    insertAppointmentRequest.input('hotenKH', sql.NVarChar, req.body.HotenKH); // Tên khách hàng
+    insertAppointmentRequest.input('HotenKH', sql.NVarChar, req.body.HotenKH); // Tên khách hàng
     insertAppointmentRequest.input('ngayGio', sql.DateTime, ngayGio);
     insertAppointmentRequest.input('ngaySinh', sql.Date, req.body.Ngaysinh); // Ngày sinh khách hàng
     insertAppointmentRequest.input('diaChi', sql.NVarChar, req.body.DiaChi); // Địa chỉ khách hàng
     insertAppointmentRequest.input('SDT', sql.Int, SDT);
     insertAppointmentRequest.input('maKH', sql.Int, maKH);
+    insertAppointmentRequest.input('MaDV', sql.Int, MaDV);
+
     await insertAppointmentRequest.query(insertAppointmentQuery);
 
     // Trả về thông báo thành công
@@ -559,7 +569,7 @@ app.post('/appointment', async (req, res) => {
 
 
 async function getMaNSByTenNS(tenNS) {
-  const query = `SELECT MaNS FROM NhaSi WHERE HotenNS = '${tenNS}'`;
+  const query = `SELECT MaKH FROM KhachHang WHERE HotenKH = '${tenNS}'`;
   const request = new sql.Request();
   request.input('tenNS', sql.NVarChar, tenNS);
   const result = await request.query(query);
@@ -1004,31 +1014,175 @@ app.get('/ViewAccountList', (req, res) => {
 
  });
  // Your route to handle blocking/unblocking accounts
-app.post('/blockAccount', async (req, res) => {
+// app.post('/blockAccount', async (req, res) => {
+//   try {
+//     // Extract data from the request body
+//     const accountId = req.body.accountId;
+//     const isBlocked = req.body.isBlocked;
+//     console.log(accountId)
+//     console.log(isBlocked)
+//     // Connect to the SQL Server
+//     const connection = await sql.connect(config);
+
+//     // Perform the update query based on accountId and isBlocked
+//     const updateQuery = `
+//       UPDATE KhachHang
+//       SET IsBlocked = ${isBlocked ? 1 : 0}
+//       WHERE MaKH = ${accountId}
+//     `;
+
+//     await connection.query(updateQuery);
+
+//     // Send a success response
+//     res.redirect('/ViewAccountList')
+//   } catch (error) {
+//     console.error('Error updating account status:', error);
+//     res.status(500).json({ error: 'An error occurred while updating account status.' });
+//   } finally {
+//     // Close the SQL Server connection
+//     await sql.close();
+//   }
+// });
+
+app.post('/blockAccount/:accountType/:accountId/:isBlocked', async (req, res) => {
   try {
-    // Extract data from the request body
-    const accountId = req.body.accountId;
-    const isBlocked = req.body.isBlocked;
+      const { accountType, accountId, isBlocked } = req.params;
 
-    // Connect to the SQL Server
-    const connection = await sql.connect(config);
+      // Create a SQL connection pool
+      const pool = await sql.connect(config);
 
-    // Perform the update query based on accountId and isBlocked
-    const updateQuery = `
-      UPDATE KhachHang
-      SET IsBlocked = ${isBlocked ? 1 : 0}
-      WHERE AccountId = ${accountId}
-    `;
+      // Define the update query based on account type
+      let updateQuery = '';
+      if (accountType === 'customer') {
+          updateQuery = `UPDATE KhachHang SET IsBlocked = ${isBlocked} WHERE MaKH = ${accountId}`;
+      } else if (accountType === 'employee') {
+          updateQuery = `UPDATE NhanVien SET IsBlocked = ${isBlocked} WHERE MaNV = ${accountId}`;
+      } else if (accountType === 'pharmacist') {
+          updateQuery = `UPDATE NhaSi SET IsBlocked = ${isBlocked} WHERE MaNS = ${accountId}`;
+      } else {
+          throw new Error('Invalid account type');
+      }
 
-    await connection.query(updateQuery);
+      // Execute the update query
+      const result = await pool.request().query(updateQuery);
 
-    // Send a success response
-    res.status(200).json({ message: 'Account status updated successfully.' });
+      // Respond with a success message or handle errors
+      res.json({ message: 'Account status updated successfully' });
   } catch (error) {
-    console.error('Error updating account status:', error);
-    res.status(500).json({ error: 'An error occurred while updating account status.' });
-  } finally {
-    // Close the SQL Server connection
-    await sql.close();
+      console.error(error);
+      res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+// app.post('/blockAccount/:accountId/:isBlocked', async (req, res) => {
+//   try {
+//       const { accountId, isBlocked } = req.params;
+//       const connection = await sql.connect(config);
+
+//       const updateQuery = `UPDATE KhachHang SET IsBlocked = ${isBlocked} WHERE MaKH = ${accountId}`;
+//       await connection.query(updateQuery);
+
+//       res.sendStatus(200);
+//   } catch (error) {
+//       console.error('Error updating account status:', error);
+//       res.status(500).json({ error: 'An error occurred while updating account status.' });
+//   } finally {
+//       await sql.close();
+//   }
+// });
+
+
+  // Your SQL Server configuration
+
+  app.post('/RegisterMedicalRecords', async (req, res) => {
+    try {
+        const {
+            fullName,
+            nameDoctor,
+            clinicDate,
+            dosageUsed,
+            listDrugs,
+            birthDate,
+            address,
+            phoneNumber,
+            serviceType
+        } = req.body;
+        console.log(fullName )
+        console.log(nameDoctor )
+        console.log(serviceType )
+        const connection = await sql.connect(config);
+
+        // Insert data into the HoSoBenhAn table
+        const query = `
+            INSERT INTO HoSoBenhAn (Trieuchung, Ngaykham, Lieusudung, DSThuoc, DSDichvu, HotenKH, HotenNS, Ngaysinh, Diachi, SDT)
+            VALUES ('${clinicDate}', '${clinicDate}', '${dosageUsed}', '${listDrugs}', '${serviceType}', '${fullName}', '${nameDoctor}', '${birthDate}', '${address}', '${phoneNumber}')
+        `;
+
+        await connection.query(query);
+
+        res.redirect('/RegisterMedicalRecords')
+    } catch (error) {
+        console.error('Error adding medical record:', error);
+        res.status(500).json({ error: 'An error occurred while adding the medical record.' });
+    } finally {
+        await sql.close();
+    }
+});
+app.get('/RegisterMedicalRecords', (req, res) => {
+  res.render('RegisterMedicalRecords');
+
+ });
+
+app.get('/getServices', async (req, res) => {
+  try {
+      const connection = await sql.connect(config);
+      const query = 'SELECT * FROM DichVu';
+      const result = await connection.query(query);
+      res.json(result.recordset);
+  } catch (error) {
+      console.error('Error fetching services:', error);
+      res.status(500).json({ error: 'An error occurred while fetching services.' });
+  } finally {
+      await sql.close();
+  }
+});
+app.get('/viewMedicalRecords', async (req, res) => {
+  try {
+      const connection = await sql.connect(config);
+
+      // Adjust the query according to your table structure
+      const query = 'SELECT * FROM HoSoBenhAn';
+
+      const result = await connection.query(query);
+
+      res.render('viewMedicalRecords', { result: result.recordset });
+  } catch (error) {
+      console.error('Error fetching medical records:', error);
+      res.status(500).json({ error: 'An error occurred while fetching medical records.' });
+  } finally {
+      await sql.close();
+  }
+});
+app.get('/getServicesAndDoctors', async (req, res) => {
+  try {
+      const connection = await sql.connect(config);
+
+      // Fetch services
+      const servicesQuery = 'SELECT * FROM DichVu';
+      const servicesResult = await connection.query(servicesQuery);
+      const services = servicesResult.recordset;
+
+      // Fetch doctors
+      const doctorsQuery = 'SELECT * FROM NhaSi';
+      const doctorsResult = await connection.query(doctorsQuery);
+      const doctors = doctorsResult.recordset;
+
+      res.json({ services, doctors });
+  } catch (error) {
+      console.error('Error fetching services and doctors:', error);
+      res.status(500).json({ error: 'An error occurred while fetching services and doctors.' });
+  } finally {
+      await sql.close();
+  }
+});
+
+
