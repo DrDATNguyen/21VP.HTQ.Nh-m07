@@ -55,27 +55,41 @@ VALUES
   ('Doctor 2', '1985-05-15', 'Address 2', 'password2'),
   ('Doctor 3', '1980-10-10', 'Address 3', 'password3');
 CREATE TABLE HoSoBenhNhan (
-    MaKH NVARCHAR(50),
+    MaKH INT,
     HotenBN NVARCHAR(50),
     HotenNS NVARCHAR(50),
-    MaBA NVARCHAR(50),
-    MaNS NVARCHAR(50),
+    MaBA INT,
+    MaNS INT,
 	PRIMARY KEY(MaKH, MaBA, MaNS),
 );
 
 CREATE TABLE HoSoBenhAn (
-    MaKH NVARCHAR(50),
     Trieuchung NVARCHAR(50),
     Ngaykham DATE,
-    MaBA NVARCHAR(50),
-    MaNS NVARCHAR(50),
-    MaThuoc NVARCHAR(50),
-    Tieusudiung NVARCHAR(50),
+    MaBA INT PRIMARY KEY IDENTITY(1,1),
+    Lieusudung NVARCHAR(50),
     DSThuoc NVARCHAR(50),
-    Dichvu NVARCHAR(50),
-	PRIMARY KEY(MaBA, MaKH, MaNS),
-);
+    DSDichvu NVARCHAR(250),
+	 HotenKH NVARCHAR(50) NOT NULL,
+	 HotenNS NVARCHAR(50) NOT NULL,
+    Ngaysinh DATE,
+    Diachi NVARCHAR(50),
 
+    SDT INT UNIQUE NOT NULL
+	--PRIMARY KEY(MaBA, MaKH, MaNS),
+);
+Create table DichVu(
+	MaDV INT PRIMARY KEY IDENTITY(1,1),
+	TenDV NVARCHAR(50),
+	Gia INT,
+);
+-- Insert sample values
+INSERT INTO DichVu (TenDV, Gia) VALUES (N'Chụp X-quang', 100000);
+INSERT INTO DichVu (TenDV, Gia) VALUES (N'Nhổ răng', 300000);
+INSERT INTO DichVu (TenDV, Gia) VALUES (N'Trám răng', 500000);
+INSERT INTO DichVu (TenDV, Gia) VALUES (N'Cạo vôi', 100000);
+INSERT INTO DichVu (TenDV, Gia) VALUES (N'Niềng răng', 2000000);
+INSERT INTO DichVu (TenDV, Gia) VALUES (N'Lấy chỉ máu', 1500000);
 CREATE TABLE Thuoc (
     MaThuoc INT PRIMARY KEY IDENTITY(1,1),
     Soluongton INT,
@@ -130,21 +144,36 @@ ALTER TABLE HoSoBenhNhan
 ADD CONSTRAINT FK_HoSoBenhNhan_KhachHang
 FOREIGN KEY (MaKH) REFERENCES KhachHang(MaKH);
 
+
 ALTER TABLE HoSoBenhNhan
 ADD CONSTRAINT FK_HoSoBenhNhan_NhaSi
 FOREIGN KEY (MaNS) REFERENCES NhaSi(MaNS);
 
+ALTER TABLE  HoSoBenhNhan
+DROP CONSTRAINT FK_HoSoBenhNhan_HoSoBenhAn;
+ALTER TABLE HoSoBenhNhan
+ADD CONSTRAINT FK_HoSoBenhNhan_HoSoBenhAn
+FOREIGN KEY (MaBA) REFERENCES HoSoBenhAn(MaBA);
+ALTER TABLE  HoSoBenhAn
+DROP CONSTRAINT FK_HoSoBenhAn_KhachHang;
 ALTER TABLE HoSoBenhAn
 ADD CONSTRAINT FK_HoSoBenhAn_KhachHang
 FOREIGN KEY (MaKH) REFERENCES KhachHang(MaKH);
-
+ALTER TABLE  HoSoBenhAn
+DROP CONSTRAINT FK_HoSoBenhAn_NhaSi;
 ALTER TABLE HoSoBenhAn
 ADD CONSTRAINT FK_HoSoBenhAn_NhaSi
 FOREIGN KEY (MaNS) REFERENCES NhaSi(MaNS);
-
+ALTER TABLE  HoSoBenhAn
+DROP CONSTRAINT FK_HoSoBenhAn_Thuoc;
 ALTER TABLE HoSoBenhAn
 ADD CONSTRAINT FK_HoSoBenhAn_Thuoc
 FOREIGN KEY (MaThuoc) REFERENCES Thuoc(MaThuoc);
+ALTER TABLE  HoSoBenhAn
+DROP CONSTRAINT FK_HoSoBenhAn_DichVu;
+ALTER TABLE HoSoBenhAn
+ADD CONSTRAINT FK_HoSoBenhAn_DichVu
+FOREIGN KEY (MaDV) REFERENCES DichVu(MaDV); 
 
 ALTER TABLE QuanTriVien
 ADD CONSTRAINT FK_QuanTriVien_Thuoc
