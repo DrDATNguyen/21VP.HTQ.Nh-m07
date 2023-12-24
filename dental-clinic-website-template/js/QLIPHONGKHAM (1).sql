@@ -1,5 +1,5 @@
 ﻿CREATE DATABASE QLIKHACHHANG
-
+SELECT * FROM DichVu
 USE UserDatabase
 CREATE TABLE UserRole (
     UserId INT,
@@ -68,8 +68,6 @@ ALTER ROLE customer_role ADD MEMBER customer_user;
 ALTER ROLE employee_role ADD MEMBER employee_user;
 ALTER ROLE pharmacist_role ADD MEMBER pharmacist_user;
 
-
-
 CREATE TABLE KhachHang (
     MaKH INT PRIMARY KEY IDENTITY(1,1),
     HotenKH NVARCHAR(50) NOT NULL,
@@ -79,8 +77,6 @@ CREATE TABLE KhachHang (
     SDT INT UNIQUE NOT NULL,
 	IsBlocked BIT DEFAULT 0
 );
-
-
 
 CREATE TABLE TaiKhoan (
     MaKH INT ,
@@ -99,11 +95,7 @@ CREATE TABLE NhanVien (
 	MaKH INT,
 	IsBlocked BIT DEFAULT 0
 );
-INSERT INTO NhaSi(HotenNS, Ngaysinh, Diachi, Matkhau,SDT)
-VALUES 
-  ('Khang Ngo', '2003-01-01', 'Lam Dong', '1',123),
-  ('Dat G', '2003-09-21', 'Cu Chi', '2',1234),
-  ('Nghia L', '2003-12-12', 'Lam Dong', '3',12345);
+
 CREATE TABLE NhaSi (
     MaNS INT PRIMARY KEY IDENTITY(1,1),
     HotenNS NVARCHAR(50),
@@ -113,11 +105,7 @@ CREATE TABLE NhaSi (
 	SDT INT,
 	IsBlocked BIT DEFAULT 0
 );
-INSERT INTO NhaSi (HotenNS, Ngaysinh, Diachi, Matkhau)
-VALUES 
-  ('Khang Ngo', '2003-01-01', 'Lam Dong', '1'),
-  ('Dat G', '2003-09-21', 'Cu Chi', '2'),
-  ('Nghia L', '2003-12-12', 'Lam Dong', '3');
+
 CREATE TABLE HoSoBenhNhan (
     MaKH INT,
     HotenBN NVARCHAR(50),
@@ -146,13 +134,7 @@ Create table DichVu(
 	TenDV NVARCHAR(50),
 	Gia INT,
 );
--- Insert sample values
-INSERT INTO DichVu (TenDV, Gia) VALUES (N'Chụp X-quang', 100000);
-INSERT INTO DichVu (TenDV, Gia) VALUES (N'Nhổ răng', 300000);
-INSERT INTO DichVu (TenDV, Gia) VALUES (N'Trám răng', 500000);
-INSERT INTO DichVu (TenDV, Gia) VALUES (N'Cạo vôi', 100000);
-INSERT INTO DichVu (TenDV, Gia) VALUES (N'Niềng răng', 2000000);
-INSERT INTO DichVu (TenDV, Gia) VALUES (N'Lấy chỉ máu', 1500000);
+
 CREATE TABLE Thuoc (
     MaThuoc INT PRIMARY KEY IDENTITY(1,1),
     Soluongton INT,
@@ -161,21 +143,13 @@ CREATE TABLE Thuoc (
     Donvitinh NVARCHAR(50),
     Chidinh NVARCHAR(50),
 );
-INSERT INTO Thuoc (Soluongton, HSD, TenThuoc, Donvitinh, Chidinh)
-VALUES 
-    (50, '2023-01-01', 'Paracetamol', 'Viên', 'Giảm đau'),
-    (30, '2023-02-01', 'Amoxicillin', 'Viên', 'Kháng sinh'),
-    (20, '2023-03-01', 'Ibuprofen', 'Viên', 'Giảm đau và chống viêm');
+
 CREATE TABLE QuanTriVien (
     HotenQTV NVARCHAR(50),
     MaThuoc INT,
     MaQTV INT PRIMARY KEY IDENTITY(1,1),
 );
-INSERT INTO QuanTriVien (HotenQTV, MaThuoc, MaQTV)
-VALUES 
-    ('Nguyen Van A', 1, 'QTV001'),
-    ('Tran Thi B', 2, 'QTV002'),
-    ('Le Van C', 3, 'QTV003');
+
 
 CREATE TABLE HeThongDatLichHen (
     MaNS INT,
@@ -198,7 +172,9 @@ SELECT * FROM LichLamViec
         WHERE MaNS = 1 AND Thoigiantrong = '2022-12-21T21:15:00'
 INSERT INTO LichLamViec (Thoigiantrong, MaNS)
 VALUES ('2022-12-21T21:15:00', 1); -- Thay thế 1 bằng giá trị thực của MaNS
+SELECT * FROM HoSoBenhAn WHERE HotenKH = 'Dat'
 
+SELECT HotenKH FROM KhachHang WHERE MaKH = 1
 ALTER TABLE HeThongDatLichHen
 ALTER COLUMN  Ngaygio DATETIME;
 
@@ -291,19 +267,37 @@ CREATE PROCEDURE DangNhapKhachHang
     @p_matKhau NVARCHAR(50)
 AS
 BEGIN
-    IF EXISTS (
-        SELECT 1
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+
+        DECLARE @Exists INT;
+
+        SELECT @Exists = COUNT(*)
         FROM TaiKhoan
-        WHERE MaKH = @p_maKhachHang AND Matkhau = @p_matKhau
-    )
-    BEGIN
-        SELECT 'Đăng nhập thành công!' AS result;
-    END
-    ELSE
-    BEGIN
-        SELECT 'Sai mã khách hàng hoặc mật khẩu. Vui lòng kiểm tra lại.' AS result;
-    END
+        WHERE MaKH = @p_maKhachHang AND Matkhau = @p_matKhau;
+
+        IF @Exists > 0
+        BEGIN
+            SELECT 'Đăng nhập thành công!' AS result;
+        END
+        ELSE
+        BEGIN
+            SELECT 'Sai mã khách hàng hoặc mật khẩu. Vui lòng kiểm tra lại.' AS result;
+        END
+
+        COMMIT;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK;
+
+        -- Xử lý các lỗi tại đây, có thể ghi log hoặc thông báo lỗi.
+        SELECT ERROR_MESSAGE() AS ErrorMessage, ERROR_NUMBER() AS ErrorNumber;
+    END CATCH
 END;
+
 
 -- Đăng kí khách hàng
 go
@@ -317,21 +311,36 @@ CREATE PROCEDURE DangKyKhachHang
     @p_matKhau NVARCHAR(255)
 AS
 BEGIN
-    DECLARE @existingUser INT;
-    SELECT @existingUser = COUNT(*)
-    FROM KhachHang
-    WHERE MaKH = @p_maKhachHang;
+    BEGIN TRY
+        BEGIN TRANSACTION;
 
-    IF @existingUser = 0
-    BEGIN
-        INSERT INTO KhachHang (MaKH,  HotenKH, ngaySinh, diaChi, SDT, matKhau)
-        VALUES (@p_maKhachHang, @p_hoTen, @p_ngaySinh, @p_diaChi, @p_soDienThoai, @p_matKhau);
-        SELECT 'Đăng ký thành công!' AS result;
-    END
-    ELSE
-    BEGIN
-        SELECT 'Mã khách hàng đã tồn tại, vui lòng chọn mã khác.' AS result;
-    END
+        SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+
+        DECLARE @existingUser INT;
+        SELECT @existingUser = COUNT(*)
+        FROM KhachHang
+        WHERE MaKH = @p_maKhachHang;
+
+        IF @existingUser = 0
+        BEGIN
+            INSERT INTO KhachHang (MaKH, HotenKH, ngaySinh, diaChi, SDT, matKhau)
+            VALUES (@p_maKhachHang, @p_hoTen, @p_ngaySinh, @p_diaChi, @p_soDienThoai, @p_matKhau);
+            SELECT 'Đăng ký thành công!' AS result;
+        END
+        ELSE
+        BEGIN
+            SELECT 'Mã khách hàng đã tồn tại, vui lòng chọn mã khác.' AS result;
+        END
+
+        COMMIT;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK;
+
+        -- Xử lý các lỗi tại đây, có thể ghi log hoặc thông báo lỗi.
+        SELECT ERROR_MESSAGE() AS ErrorMessage, ERROR_NUMBER() AS ErrorNumber;
+    END CATCH
 END;
 
 go
@@ -345,22 +354,38 @@ CREATE PROCEDURE DatLichHen
     @p_diaChi NVARCHAR(50)
 AS
 BEGIN
-    DECLARE @existingAppointment INT;
-    SELECT @existingAppointment = COUNT(*)
-    FROM HeThongDatLichHen
-    WHERE MaNS = @p_maNhaSi AND MaKH = @p_maKhachHang;
+    BEGIN TRY
+        BEGIN TRANSACTION;
 
-    IF @existingAppointment = 0
-    BEGIN
-        INSERT INTO HeThongDatLichHen (MaNS, MaKH, Ngaygio, Diachi)
-        VALUES (@p_maNhaSi, @p_maKhachHang, @p_ngayGio, @p_diaChi);
-        SELECT 'Đặt lịch hẹn thành công!' AS result;
-    END
-    ELSE
-    BEGIN
-        SELECT 'Lịch hẹn đã tồn tại, vui lòng chọn ngày giờ khác.' AS result;
-    END
+        SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+
+        DECLARE @existingAppointment INT;
+        SELECT @existingAppointment = COUNT(*)
+        FROM HeThongDatLichHen
+        WHERE MaNS = @p_maNhaSi AND MaKH = @p_maKhachHang;
+
+        IF @existingAppointment = 0
+        BEGIN
+            INSERT INTO HeThongDatLichHen (MaNS, MaKH, Ngaygio, Diachi)
+            VALUES (@p_maNhaSi, @p_maKhachHang, @p_ngayGio, @p_diaChi);
+            SELECT 'Đặt lịch hẹn thành công!' AS result;
+        END
+        ELSE
+        BEGIN
+            SELECT 'Lịch hẹn đã tồn tại, vui lòng chọn ngày giờ khác.' AS result;
+        END
+
+        COMMIT;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK;
+
+        -- Xử lý các lỗi tại đây, có thể ghi log hoặc thông báo lỗi.
+        SELECT ERROR_MESSAGE() AS ErrorMessage, ERROR_NUMBER() AS ErrorNumber;
+    END CATCH
 END;
+
 
 go
 
@@ -369,10 +394,26 @@ CREATE PROCEDURE XemDanhSachLichHenTheoKhachHang
     @p_maKhachHang NVARCHAR(50)
 AS
 BEGIN
-    SELECT MaNS, MaKH, Ngaygio, Diachi
-    FROM HeThongDatLichHen
-    WHERE MaKH = @p_maKhachHang;
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+
+        SELECT MaNS, MaKH, Ngaygio, Diachi
+        FROM HeThongDatLichHen
+        WHERE MaKH = @p_maKhachHang;
+
+        COMMIT;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK;
+
+        -- Xử lý các lỗi tại đây, có thể ghi log hoặc thông báo lỗi.
+        SELECT ERROR_MESSAGE() AS ErrorMessage, ERROR_NUMBER() AS ErrorNumber;
+    END CATCH
 END;
+
 
 go
 
