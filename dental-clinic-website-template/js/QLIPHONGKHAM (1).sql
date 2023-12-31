@@ -172,7 +172,7 @@ CREATE TABLE LichLamViec (
 
 INSERT INTO LichLamViec (Thoigiantrong,MaNS)
 VALUES 
-    ('2023-01-07 07:00:00',7),
+    ('2023-01-01T08:00:00',7),
     ('2023-01-08 08:30:00',7)
 
 DELETE FROM LichLamViec 
@@ -470,20 +470,36 @@ END;
 
 go
 
+-- Khai báo biến để lưu kết quả từ stored procedure
 DECLARE @result NVARCHAR(MAX);
 
-EXEC DatLichHen
-    @p_maNhaSi = 1,  -- Replace with the actual MaNS value
-    @p_maKhachHang = 2,  -- Replace with the actual MaKH value
-    @p_ngayGio = '2023-01-01T08:00:00',  -- Replace with the actual date and time
-    @p_diaChi = '123 Street, City',  -- Replace with the actual address
-    @p_hoten = 'Customer Name',  -- Replace with the actual customer name
-    @p_sdt = 123456789,  -- Replace with the actual phone number
-    @p_ngaysinh = '1990-01-01',  -- Replace with the actual date of birth
-    @p_maDV = 3;  -- Replace with the actual MaDV value
+-- Gọi stored procedure DatLichHen với các tham số tương ứng
+EXEC @result = DatLichHen
+    @p_maNhaSi = 7,  -- Thay thế bằng giá trị MaNS thực tế
+    @p_maKhachHang = 2,  -- Thay thế bằng giá trị MaKH thực tế
+    @p_ngayGio = '2023-01-01T08:00:00',  -- Thay thế bằng giá trị ngày và giờ thực tế
+    @p_diaChi = '123 Street, City',  -- Thay thế bằng giá trị địa chỉ thực tế
+    @p_hoten = 'Khang',  -- Thay thế bằng giá trị tên khách hàng thực tế
+    @p_sdt = 001,  -- Thay thế bằng giá trị số điện thoại thực tế
+    @p_ngaysinh = '1990-01-01',  -- Thay thế bằng giá trị ngày sinh thực tế
+    @p_maDV = 3;  -- Thay thế bằng giá trị MaDV thực tế
 
--- Capture the result from the stored procedure
+-- In kết quả từ stored procedure
 SELECT @result AS Result;
+
+DECLARE @Soluongton INT = 100;
+DECLARE @HSD DATE = '2023-12-31';
+DECLARE @TenThuoc NVARCHAR(50) = 'Paracetamolkhang';
+DECLARE @Donvitinh NVARCHAR(50) = 'Tablet';
+DECLARE @Chidinh NVARCHAR(50) = 'Pain relief';
+
+-- Execute the stored procedure
+EXEC sp_ThemThuoc
+   @Soluongton,
+   @HSD,
+   @TenThuoc,
+   @Donvitinh,
+   @Chidinh;
 
 -- Xem lịch hẹn 
 CREATE PROCEDURE XemDanhSachLichHenTheoKhachHang
