@@ -155,7 +155,7 @@ CREATE TABLE HeThongDatLichHen (
     MaNS INT,
     HotenKH NVARCHAR(50),
     Ngaygio DATE,
-    Ngaysinh DATE,
+    Ngaysinh DATETIME,
     Diachi NVARCHAR(50),
     SDT INT,
 	MaKH INT,
@@ -164,12 +164,26 @@ CREATE TABLE HeThongDatLichHen (
 );
 
 CREATE TABLE LichLamViec (
-    Thoigiantrong DATE,
-    MaNS INT
-	PRIMARY KEY(MaNS),
+	MaLLV INT PRIMARY KEY IDENTITY(1,1),
+    Thoigiantrong DATETIME,
+	Thoigianlamviec DATETIME,
+    MaNS INT,
 );
+
+INSERT INTO LichLamViec (Thoigiantrong,MaNS)
+VALUES 
+    ('2023-01-07 07:00:00',7),
+    ('2023-01-08 08:30:00',7)
+
+DELETE FROM LichLamViec 
+        WHERE MaNS = 7 AND Thoigiantrong = '2023-01-07 07:00:00'
+UPDATE LichLamViec
+SET Thoigianlamviec = Thoigiantrong,
+    Thoigiantrong = NULL
+WHERE Thoigiantrong = '2023-01-01 08:00:00.000';
+
 SELECT * FROM LichLamViec 
-        WHERE MaNS = 1 AND Thoigiantrong = '2022-12-21T21:15:00'
+        WHERE MaNS = 2 AND Thoigiantrong = '2023-01-02 09:30:00.000'
 INSERT INTO LichLamViec (Thoigiantrong, MaNS)
 VALUES ('2022-12-21T21:15:00', 1); -- Thay thế 1 bằng giá trị thực của MaNS
 SELECT * FROM HoSoBenhAn WHERE HotenKH = 'Dat'
@@ -347,11 +361,53 @@ go
 
 -- Đặt lich hẹn 
 
+--CREATE PROCEDURE DatLichHen
+--    @p_maNhaSi NVARCHAR(50),
+--    @p_maKhachHang NVARCHAR(50),
+--    @p_ngayGio DATETIME,
+--    @p_diaChi NVARCHAR(50)
+--AS
+--BEGIN
+--    BEGIN TRY
+--        BEGIN TRANSACTION;
+
+--        SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+
+--        DECLARE @existingAppointment INT;
+--        SELECT @existingAppointment = COUNT(*)
+--        FROM HeThongDatLichHen
+--        WHERE MaNS = @p_maNhaSi AND MaKH = @p_maKhachHang;
+
+--        IF @existingAppointment = 0
+--        BEGIN
+--            INSERT INTO HeThongDatLichHen (MaNS, MaKH, Ngaygio, Diachi)
+--            VALUES (@p_maNhaSi, @p_maKhachHang, @p_ngayGio, @p_diaChi);
+--            SELECT 'Đặt lịch hẹn thành công!' AS result;
+--        END
+--        ELSE
+--        BEGIN
+--            SELECT 'Lịch hẹn đã tồn tại, vui lòng chọn ngày giờ khác.' AS result;
+--        END
+
+--        COMMIT;
+--    END TRY
+--    BEGIN CATCH
+--        IF @@TRANCOUNT > 0
+--            ROLLBACK;
+
+--        -- Xử lý các lỗi tại đây, có thể ghi log hoặc thông báo lỗi.
+--        SELECT ERROR_MESSAGE() AS ErrorMessage, ERROR_NUMBER() AS ErrorNumber;
+--    END CATCH
+--END;
 CREATE PROCEDURE DatLichHen
-    @p_maNhaSi NVARCHAR(50),
-    @p_maKhachHang NVARCHAR(50),
+    @p_maNhaSi INT,
+    @p_maKhachHang INT,
     @p_ngayGio DATETIME,
-    @p_diaChi NVARCHAR(50)
+    @p_diaChi NVARCHAR(50),
+    @p_hoten NVARCHAR(255),
+    @p_sdt INT,
+    @p_ngaysinh DATE,
+    @p_maDV INT
 AS
 BEGIN
     BEGIN TRY
@@ -359,21 +415,46 @@ BEGIN
 
         SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
 
+        -- Check if customer exists
+        IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE MaKH = @p_maKhachHang)
+        BEGIN
+            -- Return error if customer does not exist
+            SELECT 'Khách hàng không tồn tại.' AS result;
+            RETURN;
+        END
+
+        -- Check if dentist exists
+        IF NOT EXISTS (SELECT 1 FROM NhaSi WHERE MaNS = @p_maNhaSi)
+        BEGIN
+            -- Return error if dentist does not exist
+            SELECT 'Nha sĩ không tồn tại.' AS result;
+            RETURN;
+        END
+
+        -- Check dentist's availability
         DECLARE @existingAppointment INT;
         SELECT @existingAppointment = COUNT(*)
-        FROM HeThongDatLichHen
-        WHERE MaNS = @p_maNhaSi AND MaKH = @p_maKhachHang;
+        FROM LichLamViec
+        WHERE MaNS = @p_maNhaSi AND Thoigiantrong = @p_ngayGio;
 
-        IF @existingAppointment = 0
+        IF @existingAppointment > 0
         BEGIN
-            INSERT INTO HeThongDatLichHen (MaNS, MaKH, Ngaygio, Diachi)
-            VALUES (@p_maNhaSi, @p_maKhachHang, @p_ngayGio, @p_diaChi);
-            SELECT 'Đặt lịch hẹn thành công!' AS result;
+            -- Return a message indicating that the dentist is not available
+            SELECT 'Nha sĩ không có lịch làm việc vào thời điểm này.' AS result;
+            RETURN;
         END
-        ELSE
-        BEGIN
-            SELECT 'Lịch hẹn đã tồn tại, vui lòng chọn ngày giờ khác.' AS result;
-        END
+
+        -- Insert the appointment
+        INSERT INTO HeThongDatLichHen (MaNS, HotenKH, Ngaygio, Ngaysinh, DiaChi, SDT, MaKH, MaDV)
+        VALUES (@p_maNhaSi, @p_hoten, @p_ngayGio, @p_ngaysinh, @p_diaChi, @p_sdt, @p_maKhachHang, @p_maDV);
+
+        -- Delete the availability from LichLamViec
+        DELETE FROM LichLamViec 
+        WHERE MaNS = @p_maNhaSi AND Thoigiantrong = @p_ngayGio;
+
+        -- Update the availability by inserting into LichLamViec
+        INSERT INTO LichLamViec (Thoigianlamviec, MaNS)
+        VALUES (@p_ngayGio, @p_maNhaSi);
 
         COMMIT;
     END TRY
@@ -381,13 +462,28 @@ BEGIN
         IF @@TRANCOUNT > 0
             ROLLBACK;
 
-        -- Xử lý các lỗi tại đây, có thể ghi log hoặc thông báo lỗi.
-        SELECT ERROR_MESSAGE() AS ErrorMessage, ERROR_NUMBER() AS ErrorNumber;
+        -- Handle errors, log, or return an appropriate error message
+        SELECT 'Đã xảy ra lỗi trong quá trình xử lý: ' + ERROR_MESSAGE() AS ErrorMessage;
     END CATCH
 END;
 
 
 go
+
+DECLARE @result NVARCHAR(MAX);
+
+EXEC DatLichHen
+    @p_maNhaSi = 1,  -- Replace with the actual MaNS value
+    @p_maKhachHang = 2,  -- Replace with the actual MaKH value
+    @p_ngayGio = '2023-01-01T08:00:00',  -- Replace with the actual date and time
+    @p_diaChi = '123 Street, City',  -- Replace with the actual address
+    @p_hoten = 'Customer Name',  -- Replace with the actual customer name
+    @p_sdt = 123456789,  -- Replace with the actual phone number
+    @p_ngaysinh = '1990-01-01',  -- Replace with the actual date of birth
+    @p_maDV = 3;  -- Replace with the actual MaDV value
+
+-- Capture the result from the stored procedure
+SELECT @result AS Result;
 
 -- Xem lịch hẹn 
 CREATE PROCEDURE XemDanhSachLichHenTheoKhachHang
