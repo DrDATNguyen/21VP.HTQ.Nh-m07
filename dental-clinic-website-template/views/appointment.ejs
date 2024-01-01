@@ -168,7 +168,7 @@
                                 <div class="col-12 col-sm-6">
                                     <input name="SDT" class="form-control bg-light border-0" placeholder="Your PhoneNumber" style="height: 55px;">
                                 </div>
-                                <div class="col-12 col-sm-6">
+                                <!-- <div class="col-12 col-sm-6">
                                     <div class="date" id="date" data-target-input="nearest">
                                         <input type="text" name = "date" 
                                             class="form-control bg-light border-0 datetimepicker-input"
@@ -181,6 +181,12 @@
                                             class="form-control bg-light border-0 datetimepicker-input"
                                             placeholder="Appointment Time" data-target="#time1" data-toggle="datetimepicker" style="height: 55px;">
                                     </div>
+                                </div> -->
+                                <div class="col-12 col-sm-6">
+                                    <select name="selectedDatetime" class="form-select bg-light border-0" style="height: 55px;">
+                                        <option selected>Select A Time</option>
+                                        <!-- Options will be dynamically added here -->
+                                    </select>
                                 </div>
                                 <div class="col-12">
                                     <button class="btn btn-dark w-100 py-3" type="submit">Make Appointment</button>
@@ -290,11 +296,13 @@
     <script>
         // Fetch data from the server and populate the dropdowns
         document.addEventListener('DOMContentLoaded', function () {
-            fetch('/getServicesAndDoctors') // Adjust the endpoint based on your server route
+            fetch('/getServicesAndDoctorsAndDateTime') // Adjust the endpoint based on your server route
                 .then(response => response.json())
                 .then(data => {
                     const serviceDropdown = document.querySelector('[name="selectedService"]');
                     const doctorDropdown = document.querySelector('[name="selectedDoctor"]');
+                    const datetimeDropdown = document.querySelector('[name="selectedDatetime"]');
+
     
                     // Populate service dropdown
                     data.services.forEach(service => {
@@ -310,6 +318,12 @@
                         option.value = doctor.MaNS; // Assuming MaNS is the unique identifier for doctors
                         option.textContent = doctor.HotenNS;
                         doctorDropdown.appendChild(option);
+                    });
+                    data.datetimes.forEach(datetime => {
+                        const option = document.createElement('option');
+                        option.value = datetime.Thoigiantrong; // Assuming MaNS is the unique identifier for doctors
+                        option.textContent = datetime.Thoigiantrong;
+                        datetimeDropdown.appendChild(option);
                     });
                 })
                 .catch(error => console.error('Error fetching data:', error));
