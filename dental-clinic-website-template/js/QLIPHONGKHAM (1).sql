@@ -172,8 +172,8 @@ CREATE TABLE LichLamViec (
 
 INSERT INTO LichLamViec (Thoigiantrong,MaNS)
 VALUES 
-    ('2023-01-01T08:00:00',7),
-    ('2023-01-08 08:30:00',7)
+    ('2023-02-01T08:00:00',7),
+    ('2023-03-08 08:30:00',7)
 
 DELETE FROM LichLamViec 
         WHERE MaNS = 7 AND Thoigiantrong = '2023-01-07 07:00:00'
@@ -410,16 +410,17 @@ CREATE PROCEDURE DatLichHen
     @p_maDV INT
 AS
 BEGIN
+    SET NOCOUNT ON; -- Tắt thông báo số hàng bị ảnh hưởng để tránh lỗi số hàng
+
     BEGIN TRY
         BEGIN TRANSACTION;
-
-        SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
-
+		 SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
         -- Check if customer exists
         IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE MaKH = @p_maKhachHang)
         BEGIN
             -- Return error if customer does not exist
             SELECT 'Khách hàng không tồn tại.' AS result;
+            ROLLBACK; -- Rollback transaction
             RETURN;
         END
 
@@ -428,6 +429,7 @@ BEGIN
         BEGIN
             -- Return error if dentist does not exist
             SELECT 'Nha sĩ không tồn tại.' AS result;
+            ROLLBACK; -- Rollback transaction
             RETURN;
         END
 
@@ -437,10 +439,11 @@ BEGIN
         FROM LichLamViec
         WHERE MaNS = @p_maNhaSi AND Thoigiantrong = @p_ngayGio;
 
-        IF @existingAppointment > 0
+        IF @existingAppointment = 0
         BEGIN
             -- Return a message indicating that the dentist is not available
             SELECT 'Nha sĩ không có lịch làm việc vào thời điểm này.' AS result;
+            ROLLBACK; -- Rollback transaction
             RETURN;
         END
 
@@ -456,11 +459,11 @@ BEGIN
         INSERT INTO LichLamViec (Thoigianlamviec, MaNS)
         VALUES (@p_ngayGio, @p_maNhaSi);
 
-        COMMIT;
+        COMMIT; -- Commit transaction
     END TRY
     BEGIN CATCH
         IF @@TRANCOUNT > 0
-            ROLLBACK;
+            ROLLBACK; -- Rollback transaction
 
         -- Handle errors, log, or return an appropriate error message
         SELECT 'Đã xảy ra lỗi trong quá trình xử lý: ' + ERROR_MESSAGE() AS ErrorMessage;
@@ -468,8 +471,13 @@ BEGIN
 END;
 
 
-go
 
+
+go
+SELECT COUNT(*)
+        FROM LichLamViec
+        WHERE MaNS = 7 AND Thoigiantrong = '2023-02-01T08:00:00';
+select * from KhachHang
 -- Khai báo biến để lưu kết quả từ stored procedure
 DECLARE @result NVARCHAR(MAX);
 
@@ -477,7 +485,7 @@ DECLARE @result NVARCHAR(MAX);
 EXEC @result = DatLichHen
     @p_maNhaSi = 7,  -- Thay thế bằng giá trị MaNS thực tế
     @p_maKhachHang = 2,  -- Thay thế bằng giá trị MaKH thực tế
-    @p_ngayGio = '2023-01-01T08:00:00',  -- Thay thế bằng giá trị ngày và giờ thực tế
+    @p_ngayGio = '2023-02-01T08:00:00',  -- Thay thế bằng giá trị ngày và giờ thực tế
     @p_diaChi = '123 Street, City',  -- Thay thế bằng giá trị địa chỉ thực tế
     @p_hoten = 'Khang',  -- Thay thế bằng giá trị tên khách hàng thực tế
     @p_sdt = 001,  -- Thay thế bằng giá trị số điện thoại thực tế
@@ -487,6 +495,37 @@ EXEC @result = DatLichHen
 -- In kết quả từ stored procedure
 SELECT @result AS Result;
 
+DECLARE 
+    @p_maNhaSi INT,
+    @p_maKhachHang INT,
+    @p_ngayGio DATETIME,
+    @p_diaChi NVARCHAR(50),
+    @p_hoten NVARCHAR(255),
+    @p_sdt INT,
+    @p_ngaysinh DATE,
+    @p_maDV INT;
+
+-- Đặt giá trị cho các tham số
+SET @p_maNhaSi = 7; -- Giả sử giá trị là 1
+SET @p_maKhachHang = 6; -- Giả sử giá trị là 2
+SET @p_ngayGio = '2023-02-01T08:00:00'; -- Giả sử giá trị là ngày giờ mong muốn
+SET @p_diaChi = '123 Đường ABC, Quận XYZ';
+SET @p_hoten = 'Dat2';
+SET @p_sdt = 1;
+SET @p_ngaysinh = '1990/01/01'; -- Giả sử giá trị là ngày sinh mong muốn
+SET @p_maDV = 3; -- Giả sử giá trị là 3
+
+-- Thực thi stored procedure
+EXEC DatLichHen 
+    @p_maNhaSi,
+    @p_maKhachHang,
+    @p_ngayGio,
+    @p_diaChi,
+    @p_hoten,
+    @p_sdt,
+    @p_ngaysinh,
+    @p_maDV;
+	COMMIT;
 DECLARE @Soluongton INT = 100;
 DECLARE @HSD DATE = '2023-12-31';
 DECLARE @TenThuoc NVARCHAR(50) = 'Paracetamolkhang';
