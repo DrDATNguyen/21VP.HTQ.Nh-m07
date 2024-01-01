@@ -553,14 +553,16 @@ app.post('/appointment', async (req, res) => {
     insertAppointmentRequest.input('MaDV', sql.Int, MaDV);
 
     const result = await insertAppointmentRequest.query(insertAppointmentQuery);
-     
+    
     // Kiểm tra nếu có thông báo từ stored procedure
     if (result && result.recordset && result.recordset[0] && result.recordset[0].ResultMessage) {
-      res.status(200).json({ message: result.recordset[0].ResultMessage });
+      const message = result.recordset[0].ResultMessage;
+      res.render('appointment', { message });
   } else {
-      res.status(200).json({ message: 'Thành công.' });
+       const message= 'Thành công.';
+       res.render('appointment', { message });
   }
-
+  
     // Trả về thông báo thành công
     // res.status(200).json({ message: 'Đặt lịch hẹn thành công.' });
   } catch (error) {
