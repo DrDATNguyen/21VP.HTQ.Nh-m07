@@ -504,36 +504,43 @@ app.post('/appointment', async (req, res) => {
     // Lấy MaKH từ SDT
     const maKH = await getMaKHBySDT(SDT);
 
-    if (!maKH) {
-      return res.status(400).json({ error: 'Khách hàng không tồn tại.' });
-    }
+    // if (!maKH) {
+    //   return res.status(400).json({ error: 'Khách hàng không tồn tại.' });
+    // }
 
     // Lấy MaNS từ tên nha sĩ
     //  const maKH = await getMaNSByTenNS(HotenKH);
-    console.log(maNS);
-    if (!maNS) {
-      return res.status(400).json({ error: 'Nha sĩ không tồn tại.' });
-    }
+    // console.log(maNS);
+    // if (!maNS) {
+    //   return res.status(400).json({ error: 'Nha sĩ không tồn tại.' });
+    // }
 
     // Kiểm tra sự rãnh của nha sĩ
-    const checkAvailabilityQuery = `
-        SELECT * FROM LichLamViec 
-        WHERE MaNS = '${maNS}' AND Thoigiantrong = '${ngayGio}'
-    `;
-    const checkAvailabilityRequest = new sql.Request();
-    checkAvailabilityRequest.input('maNS', sql.Int, maNS);
-    checkAvailabilityRequest.input('ngayGio', sql.DateTime, ngayGio);
-    const availabilityResult = await checkAvailabilityRequest.query(checkAvailabilityQuery);
-    console.log(availabilityResult);
-    if (availabilityResult.recordset.length === 0) {
-      return res.status(400).json({ error: 'Nha sĩ không có lịch làm việc vào thời điểm này.' });
-    }
+    // const checkAvailabilityQuery = `
+    //     SELECT * FROM LichLamViec 
+    //     WHERE MaNS = '${maNS}' AND Thoigiantrong = '${ngayGio}'
+    // `;
+    // const checkAvailabilityRequest = new sql.Request();
+    // checkAvailabilityRequest.input('maNS', sql.Int, maNS);
+    // checkAvailabilityRequest.input('ngayGio', sql.DateTime, ngayGio);
+    // const availabilityResult = await checkAvailabilityRequest.query(checkAvailabilityQuery);
+    // console.log(availabilityResult);
+    // if (availabilityResult.recordset.length === 0) {
+    //   return res.status(400).json({ error: 'Nha sĩ không có lịch làm việc vào thời điểm này.' });
+    // }
 
     // Thực hiện truy vấn để đặt lịch hẹn mới
     const insertAppointmentQuery = `
-        INSERT INTO HeThongDatLichHen (MaNS, HotenKH, Ngaygio, Ngaysinh, DiaChi, SDT, MaKH,MaDV)
-        VALUES (@maNS, @HotenKH, @ngayGio, @ngaySinh, @diaChi, @SDT, @maKH,@MaDV)
-    `;
+    EXEC DatLichHen 
+        @p_maNhaSi = ${maNS},
+        @p_maKhachHang = ${maKH},
+        @p_ngayGio = '${ngayGio}',
+        @p_diaChi = N'${req.body.DiaChi}',
+        @p_hoten = N'${HotenKH}',
+        @p_sdt = ${SDT},
+        @p_ngaysinh = '${req.body.Ngaysinh}',
+        @p_maDV = ${MaDV};
+`;
     
     const insertAppointmentRequest = new sql.Request();
     insertAppointmentRequest.input('maNS', sql.Int, maNS);
@@ -545,29 +552,17 @@ app.post('/appointment', async (req, res) => {
     insertAppointmentRequest.input('maKH', sql.Int, maKH);
     insertAppointmentRequest.input('MaDV', sql.Int, MaDV);
 
-    await insertAppointmentRequest.query(insertAppointmentQuery);
-    // Thực hiện truy vấn để xóa thời gian trống trong bảng LichLamViec
-    const deleteAvailabilityQuery = `
-        DELETE FROM LichLamViec 
-        WHERE MaNS = @maNS AND Thoigiantrong = @ngayGio
-    `;
-    const deleteAvailabilityRequest = new sql.Request();
-    deleteAvailabilityRequest.input('maNS', sql.Int, maNS);
-    deleteAvailabilityRequest.input('ngayGio', sql.DateTime, ngayGio);
-    await deleteAvailabilityRequest.query(deleteAvailabilityQuery);
-
-    // Thực hiện truy vấn để dồn giá trị cột Thoigiantrong
-    const updateAvailabilityQuery = `
-    INSERT INTO LichLamViec ( Thoigianlamviec, MaNS)
-    VALUES (@ngayGio, @maNS);
-    `;
-    const updateAvailabilityRequest = new sql.Request();
-    updateAvailabilityRequest.input('maNS', sql.Int, maNS);
-    updateAvailabilityRequest.input('ngayGio', sql.DateTime, ngayGio);
-    await updateAvailabilityRequest.query(updateAvailabilityQuery);
+    const result = await insertAppointmentRequest.query(insertAppointmentQuery);
+     
+    // Kiểm tra nếu có thông báo từ stored procedure
+    if (result && result.recordset && result.recordset[0] && result.recordset[0].ResultMessage) {
+      res.status(200).json({ message: result.recordset[0].ResultMessage });
+  } else {
+      res.status(200).json({ message: 'Thành công.' });
+  }
 
     // Trả về thông báo thành công
-    res.status(200).json({ message: 'Đặt lịch hẹn thành công.' });
+    // res.status(200).json({ message: 'Đặt lịch hẹn thành công.' });
   } catch (error) {
     console.error('Error during appointment booking:', error);
     res.status(500).json({ error: 'Đã xảy ra lỗi trong quá trình xử lý.' });

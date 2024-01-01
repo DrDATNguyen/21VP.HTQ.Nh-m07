@@ -172,8 +172,8 @@ CREATE TABLE LichLamViec (
 
 INSERT INTO LichLamViec (Thoigiantrong,MaNS)
 VALUES 
-    ('2023-02-01T08:00:00',7),
-    ('2023-03-08 08:30:00',7)
+    ('2023-02-05T08:00:00',7),
+    ('2023-03-06 08:30:00',7)
 
 DELETE FROM LichLamViec 
         WHERE MaNS = 7 AND Thoigiantrong = '2023-01-07 07:00:00'
@@ -410,26 +410,28 @@ CREATE PROCEDURE DatLichHen
     @p_maDV INT
 AS
 BEGIN
-    SET NOCOUNT ON; -- Tắt thông báo số hàng bị ảnh hưởng để tránh lỗi số hàng
+    SET NOCOUNT ON;
+    DECLARE @outputMessage NVARCHAR(255);
 
     BEGIN TRY
         BEGIN TRANSACTION;
-		 SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+        SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+
         -- Check if customer exists
         IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE MaKH = @p_maKhachHang)
         BEGIN
-            -- Return error if customer does not exist
-            SELECT 'Khách hàng không tồn tại.' AS result;
-            ROLLBACK; -- Rollback transaction
+            -- Set the error message
+            SET @outputMessage = 'Khách hàng không tồn tại.';
+            ROLLBACK;
             RETURN;
         END
 
         -- Check if dentist exists
         IF NOT EXISTS (SELECT 1 FROM NhaSi WHERE MaNS = @p_maNhaSi)
         BEGIN
-            -- Return error if dentist does not exist
-            SELECT 'Nha sĩ không tồn tại.' AS result;
-            ROLLBACK; -- Rollback transaction
+            -- Set the error message
+            SET @outputMessage = 'Nha sĩ không tồn tại.';
+            ROLLBACK;
             RETURN;
         END
 
@@ -441,9 +443,9 @@ BEGIN
 
         IF @existingAppointment = 0
         BEGIN
-            -- Return a message indicating that the dentist is not available
-            SELECT 'Nha sĩ không có lịch làm việc vào thời điểm này.' AS result;
-            ROLLBACK; -- Rollback transaction
+            -- Set the error message
+            SET @outputMessage = 'Nha sĩ không có lịch làm việc vào thời điểm này.';
+            ROLLBACK;
             RETURN;
         END
 
@@ -459,16 +461,20 @@ BEGIN
         INSERT INTO LichLamViec (Thoigianlamviec, MaNS)
         VALUES (@p_ngayGio, @p_maNhaSi);
 
-        COMMIT; -- Commit transaction
+        COMMIT;
     END TRY
     BEGIN CATCH
         IF @@TRANCOUNT > 0
-            ROLLBACK; -- Rollback transaction
+            ROLLBACK;
 
-        -- Handle errors, log, or return an appropriate error message
-        SELECT 'Đã xảy ra lỗi trong quá trình xử lý: ' + ERROR_MESSAGE() AS ErrorMessage;
+        -- Set the error message
+        SET @outputMessage = 'Đã xảy ra lỗi trong quá trình xử lý: ' + ERROR_MESSAGE();
     END CATCH
+
+    -- Return the output message
+    SELECT @outputMessage AS result;
 END;
+
 
 
 
