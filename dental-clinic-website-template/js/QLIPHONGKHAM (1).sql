@@ -1,4 +1,4 @@
-﻿CREATE DATABASE QLIKHACHHANG
+﻿CREATE DATABASE UserDatabase
 SELECT * FROM DichVu
 USE UserDatabase
 CREATE TABLE UserRole (
@@ -122,6 +122,8 @@ CREATE TABLE HoSoBenhAn (
     Lieusudung NVARCHAR(50),
     DSThuoc NVARCHAR(50),
     DSDichvu NVARCHAR(250),
+	MaKH INT,
+	MaNS INT,
 	 HotenKH NVARCHAR(50) NOT NULL,
 	 HotenNS NVARCHAR(50) NOT NULL,
     Ngaysinh DATE,
@@ -155,7 +157,7 @@ CREATE TABLE HeThongDatLichHen (
     MaNS INT,
     HotenKH NVARCHAR(50),
     Ngaygio DATE,
-    Ngaysinh DATETIME,
+    Ngaysinh DATE,
     Diachi NVARCHAR(50),
     SDT INT,
 	MaKH INT,
@@ -164,26 +166,12 @@ CREATE TABLE HeThongDatLichHen (
 );
 
 CREATE TABLE LichLamViec (
-	MaLLV INT PRIMARY KEY IDENTITY(1,1),
-    Thoigiantrong DATETIME,
-	Thoigianlamviec DATETIME,
-    MaNS INT,
+    Thoigiantrong DATE,
+    MaNS INT
+	PRIMARY KEY(MaNS),
 );
-
-INSERT INTO LichLamViec (Thoigiantrong,MaNS)
-VALUES 
-    ('2023-02-05T08:00:00',7),
-    ('2023-03-06 08:30:00',7)
-
-DELETE FROM LichLamViec 
-        WHERE MaNS = 7 AND Thoigiantrong = '2023-01-07 07:00:00'
-UPDATE LichLamViec
-SET Thoigianlamviec = Thoigiantrong,
-    Thoigiantrong = NULL
-WHERE Thoigiantrong = '2023-01-01 08:00:00.000';
-
 SELECT * FROM LichLamViec 
-        WHERE MaNS = 2 AND Thoigiantrong = '2023-01-02 09:30:00.000'
+        WHERE MaNS = 1 AND Thoigiantrong = '2022-12-21T21:15:00'
 INSERT INTO LichLamViec (Thoigiantrong, MaNS)
 VALUES ('2022-12-21T21:15:00', 1); -- Thay thế 1 bằng giá trị thực của MaNS
 SELECT * FROM HoSoBenhAn WHERE HotenKH = 'Dat'
@@ -277,7 +265,7 @@ FOREIGN KEY (MaKH) REFERENCES KhachHang(MaKH);
 -- Đăng nhập
 go
 CREATE PROCEDURE DangNhapKhachHang
-    @p_maKhachHang NVARCHAR(50),
+    @TenDangNhap NVARCHAR(50),
     @p_matKhau NVARCHAR(50)
 AS
 BEGIN
@@ -290,7 +278,7 @@ BEGIN
 
         SELECT @Exists = COUNT(*)
         FROM TaiKhoan
-        WHERE MaKH = @p_maKhachHang AND Matkhau = @p_matKhau;
+        WHERE SDT = @TenDangNhap AND Matkhau = @p_matKhau;
 
         IF @Exists > 0
         BEGIN
@@ -313,11 +301,12 @@ BEGIN
 END;
 
 
+
 -- Đăng kí khách hàng
 go
 
 CREATE PROCEDURE DangKyKhachHang
-    @p_maKhachHang INT,
+    --@p_maKhachHang INT,
     @p_hoTen NVARCHAR(255),
     @p_ngaySinh DATE,
     @p_diaChi NVARCHAR(255),
@@ -333,12 +322,12 @@ BEGIN
         DECLARE @existingUser INT;
         SELECT @existingUser = COUNT(*)
         FROM KhachHang
-        WHERE MaKH = @p_maKhachHang;
+        WHERE SDT = @p_soDienThoai;
 
         IF @existingUser = 0
         BEGIN
-            INSERT INTO KhachHang (MaKH, HotenKH, ngaySinh, diaChi, SDT, matKhau)
-            VALUES (@p_maKhachHang, @p_hoTen, @p_ngaySinh, @p_diaChi, @p_soDienThoai, @p_matKhau);
+            INSERT INTO KhachHang (HotenKH, ngaySinh, diaChi, SDT, matKhau)
+            VALUES (@p_hoTen, @p_ngaySinh, @p_diaChi, @p_soDienThoai, @p_matKhau);
             SELECT 'Đăng ký thành công!' AS result;
         END
         ELSE
@@ -355,111 +344,39 @@ BEGIN
         -- Xử lý các lỗi tại đây, có thể ghi log hoặc thông báo lỗi.
         SELECT ERROR_MESSAGE() AS ErrorMessage, ERROR_NUMBER() AS ErrorNumber;
     END CATCH
-END;
+END;	
 
 go
 
 -- Đặt lich hẹn 
 
---CREATE PROCEDURE DatLichHen
---    @p_maNhaSi NVARCHAR(50),
---    @p_maKhachHang NVARCHAR(50),
---    @p_ngayGio DATETIME,
---    @p_diaChi NVARCHAR(50)
---AS
---BEGIN
---    BEGIN TRY
---        BEGIN TRANSACTION;
-
---        SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
-
---        DECLARE @existingAppointment INT;
---        SELECT @existingAppointment = COUNT(*)
---        FROM HeThongDatLichHen
---        WHERE MaNS = @p_maNhaSi AND MaKH = @p_maKhachHang;
-
---        IF @existingAppointment = 0
---        BEGIN
---            INSERT INTO HeThongDatLichHen (MaNS, MaKH, Ngaygio, Diachi)
---            VALUES (@p_maNhaSi, @p_maKhachHang, @p_ngayGio, @p_diaChi);
---            SELECT 'Đặt lịch hẹn thành công!' AS result;
---        END
---        ELSE
---        BEGIN
---            SELECT 'Lịch hẹn đã tồn tại, vui lòng chọn ngày giờ khác.' AS result;
---        END
-
---        COMMIT;
---    END TRY
---    BEGIN CATCH
---        IF @@TRANCOUNT > 0
---            ROLLBACK;
-
---        -- Xử lý các lỗi tại đây, có thể ghi log hoặc thông báo lỗi.
---        SELECT ERROR_MESSAGE() AS ErrorMessage, ERROR_NUMBER() AS ErrorNumber;
---    END CATCH
---END;
 CREATE PROCEDURE DatLichHen
-    @p_maNhaSi INT,
-    @p_maKhachHang INT,
+    @p_maNhaSi NVARCHAR(50),
+    @p_maKhachHang NVARCHAR(50),
     @p_ngayGio DATETIME,
-    @p_diaChi NVARCHAR(50),
-    @p_hoten NVARCHAR(255),
-    @p_sdt INT,
-    @p_ngaysinh DATE,
-    @p_maDV INT
+    @p_diaChi NVARCHAR(50)
 AS
 BEGIN
-    SET NOCOUNT ON;
-    DECLARE @outputMessage NVARCHAR(255);
-
     BEGIN TRY
         BEGIN TRANSACTION;
-        SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 
-        -- Check if customer exists
-        IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE MaKH = @p_maKhachHang)
-        BEGIN
-            -- Set the error message
-            SET @outputMessage = 'Khách hàng không tồn tại.';
-            ROLLBACK;
-            RETURN;
-        END
+        SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
 
-        -- Check if dentist exists
-        IF NOT EXISTS (SELECT 1 FROM NhaSi WHERE MaNS = @p_maNhaSi)
-        BEGIN
-            -- Set the error message
-            SET @outputMessage = 'Nha sĩ không tồn tại.';
-            ROLLBACK;
-            RETURN;
-        END
-
-        -- Check dentist's availability
         DECLARE @existingAppointment INT;
         SELECT @existingAppointment = COUNT(*)
-        FROM LichLamViec
-        WHERE MaNS = @p_maNhaSi AND Thoigiantrong = @p_ngayGio;
+        FROM HeThongDatLichHen
+        WHERE MaNS = @p_maNhaSi AND MaKH = @p_maKhachHang;
 
         IF @existingAppointment = 0
         BEGIN
-            -- Set the error message
-            SET @outputMessage = 'Nha sĩ không có lịch làm việc vào thời điểm này.';
-            ROLLBACK;
-            RETURN;
+            INSERT INTO HeThongDatLichHen (MaNS, MaKH, Ngaygio, Diachi)
+            VALUES (@p_maNhaSi, @p_maKhachHang, @p_ngayGio, @p_diaChi);
+            SELECT 'Đặt lịch hẹn thành công!' AS result;
         END
-
-        -- Insert the appointment
-        INSERT INTO HeThongDatLichHen (MaNS, HotenKH, Ngaygio, Ngaysinh, DiaChi, SDT, MaKH, MaDV)
-        VALUES (@p_maNhaSi, @p_hoten, @p_ngayGio, @p_ngaysinh, @p_diaChi, @p_sdt, @p_maKhachHang, @p_maDV);
-
-        -- Delete the availability from LichLamViec
-        DELETE FROM LichLamViec 
-        WHERE MaNS = @p_maNhaSi AND Thoigiantrong = @p_ngayGio;
-
-        -- Update the availability by inserting into LichLamViec
-        INSERT INTO LichLamViec (Thoigianlamviec, MaNS)
-        VALUES (@p_ngayGio, @p_maNhaSi);
+        ELSE
+        BEGIN
+            SELECT 'Lịch hẹn đã tồn tại, vui lòng chọn ngày giờ khác.' AS result;
+        END
 
         COMMIT;
     END TRY
@@ -467,84 +384,13 @@ BEGIN
         IF @@TRANCOUNT > 0
             ROLLBACK;
 
-        -- Set the error message
-        SET @outputMessage = 'Đã xảy ra lỗi trong quá trình xử lý: ' + ERROR_MESSAGE();
+        -- Xử lý các lỗi tại đây, có thể ghi log hoặc thông báo lỗi.
+        SELECT ERROR_MESSAGE() AS ErrorMessage, ERROR_NUMBER() AS ErrorNumber;
     END CATCH
-
-    -- Return the output message
-    SELECT @outputMessage AS result;
 END;
 
 
-
-
-
 go
-SELECT COUNT(*)
-        FROM LichLamViec
-        WHERE MaNS = 7 AND Thoigiantrong = '2023-02-01T08:00:00';
-select * from KhachHang
--- Khai báo biến để lưu kết quả từ stored procedure
-DECLARE @result NVARCHAR(MAX);
-
--- Gọi stored procedure DatLichHen với các tham số tương ứng
-EXEC @result = DatLichHen
-    @p_maNhaSi = 7,  -- Thay thế bằng giá trị MaNS thực tế
-    @p_maKhachHang = 2,  -- Thay thế bằng giá trị MaKH thực tế
-    @p_ngayGio = '2023-02-01T08:00:00',  -- Thay thế bằng giá trị ngày và giờ thực tế
-    @p_diaChi = '123 Street, City',  -- Thay thế bằng giá trị địa chỉ thực tế
-    @p_hoten = 'Khang',  -- Thay thế bằng giá trị tên khách hàng thực tế
-    @p_sdt = 001,  -- Thay thế bằng giá trị số điện thoại thực tế
-    @p_ngaysinh = '1990-01-01',  -- Thay thế bằng giá trị ngày sinh thực tế
-    @p_maDV = 3;  -- Thay thế bằng giá trị MaDV thực tế
-
--- In kết quả từ stored procedure
-SELECT @result AS Result;
-
-DECLARE 
-    @p_maNhaSi INT,
-    @p_maKhachHang INT,
-    @p_ngayGio DATETIME,
-    @p_diaChi NVARCHAR(50),
-    @p_hoten NVARCHAR(255),
-    @p_sdt INT,
-    @p_ngaysinh DATE,
-    @p_maDV INT;
-
--- Đặt giá trị cho các tham số
-SET @p_maNhaSi = 7; -- Giả sử giá trị là 1
-SET @p_maKhachHang = 6; -- Giả sử giá trị là 2
-SET @p_ngayGio = '2023-02-01T08:00:00'; -- Giả sử giá trị là ngày giờ mong muốn
-SET @p_diaChi = '123 Đường ABC, Quận XYZ';
-SET @p_hoten = 'Dat2';
-SET @p_sdt = 1;
-SET @p_ngaysinh = '1990/01/01'; -- Giả sử giá trị là ngày sinh mong muốn
-SET @p_maDV = 3; -- Giả sử giá trị là 3
-
--- Thực thi stored procedure
-EXEC DatLichHen 
-    @p_maNhaSi,
-    @p_maKhachHang,
-    @p_ngayGio,
-    @p_diaChi,
-    @p_hoten,
-    @p_sdt,
-    @p_ngaysinh,
-    @p_maDV;
-	COMMIT;
-DECLARE @Soluongton INT = 100;
-DECLARE @HSD DATE = '2023-12-31';
-DECLARE @TenThuoc NVARCHAR(50) = 'Paracetamolkhang';
-DECLARE @Donvitinh NVARCHAR(50) = 'Tablet';
-DECLARE @Chidinh NVARCHAR(50) = 'Pain relief';
-
--- Execute the stored procedure
-EXEC sp_ThemThuoc
-   @Soluongton,
-   @HSD,
-   @TenThuoc,
-   @Donvitinh,
-   @Chidinh;
 
 -- Xem lịch hẹn 
 CREATE PROCEDURE XemDanhSachLichHenTheoKhachHang
@@ -592,7 +438,6 @@ CREATE PROCEDURE SuaThongTinCaNhanKhachHang
     @p_hoTen NVARCHAR(50),
     @p_ngaySinh DATE,
     @p_diaChi NVARCHAR(50),
-    @p_matKhau NVARCHAR(50),
     @p_soDienThoai INT
 AS
 BEGIN
@@ -610,7 +455,6 @@ BEGIN
         HotenKH = @p_hoTen,
         Ngaysinh = @p_ngaySinh,
         Diachi = @p_diaChi,
-        Matkhau = @p_matKhau,
         SDT = @p_soDienThoai
     WHERE MaKH = @p_maKhachHang;
 
@@ -985,8 +829,6 @@ go
 
 -- Thêm thuốc
 CREATE PROCEDURE sp_ThemThuoc
-
-
    -- @MaThuoc NVARCHAR(50),
     @Soluongton INT,
     @HSD DATE,
@@ -1034,9 +876,10 @@ EXEC sp_ThemThuoc
    @Donvitinh,
    @Chidinh;
 
+ go
 -- Sửa thuốc
 CREATE PROCEDURE SuaThuoc
-    @MaThuoc NVARCHAR(50),
+    --@MaThuoc NVARCHAR(50),
     @Soluongton INT,
     @HSD DATE,
     @TenThuoc NVARCHAR(50),
@@ -1045,7 +888,7 @@ CREATE PROCEDURE SuaThuoc
 AS
 BEGIN
     SET NOCOUNT ON;
-    IF EXISTS (SELECT 1 FROM Thuoc WHERE MaThuoc = @MaThuoc)
+    IF EXISTS (SELECT 1 FROM Thuoc WHERE TenThuoc = @TenThuoc)
     BEGIN
         UPDATE Thuoc
         SET
@@ -1054,7 +897,7 @@ BEGIN
             TenThuoc = @TenThuoc,
             Donvitinh = @Donvitinh,
             Chidinh = @Chidinh
-        WHERE MaThuoc = @MaThuoc;
+        WHERE TenThuoc = @TenThuoc;
 
         PRINT 'Đã cập nhật thông tin thuốc thành công.';
     END
