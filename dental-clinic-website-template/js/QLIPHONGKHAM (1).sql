@@ -1,4 +1,4 @@
-﻿CREATE DATABASE UserDatabase
+﻿CREATE DATABASE QLIKHACHHANG
 SELECT * FROM DichVu
 USE UserDatabase
 CREATE TABLE UserRole (
@@ -122,8 +122,6 @@ CREATE TABLE HoSoBenhAn (
     Lieusudung NVARCHAR(50),
     DSThuoc NVARCHAR(50),
     DSDichvu NVARCHAR(250),
-	MaKH INT,
-	MaNS INT,
 	 HotenKH NVARCHAR(50) NOT NULL,
 	 HotenNS NVARCHAR(50) NOT NULL,
     Ngaysinh DATE,
@@ -157,7 +155,7 @@ CREATE TABLE HeThongDatLichHen (
     MaNS INT,
     HotenKH NVARCHAR(50),
     Ngaygio DATE,
-    Ngaysinh DATE,
+    Ngaysinh DATETIME,
     Diachi NVARCHAR(50),
     SDT INT,
 	MaKH INT,
@@ -166,12 +164,26 @@ CREATE TABLE HeThongDatLichHen (
 );
 
 CREATE TABLE LichLamViec (
-    Thoigiantrong DATE,
-    MaNS INT
-	PRIMARY KEY(MaNS),
+	MaLLV INT PRIMARY KEY IDENTITY(1,1),
+    Thoigiantrong DATETIME,
+	Thoigianlamviec DATETIME,
+    MaNS INT,
 );
+
+INSERT INTO LichLamViec (Thoigiantrong,MaNS)
+VALUES 
+    ('2023-02-09T08:00:00',7),
+    ('2023-03-10 08:30:00',7)
+
+DELETE FROM LichLamViec 
+        WHERE MaNS = 7 AND Thoigiantrong = '2023-01-07 07:00:00'
+UPDATE LichLamViec
+SET Thoigianlamviec = Thoigiantrong,
+    Thoigiantrong = NULL
+WHERE Thoigiantrong = '2023-01-01 08:00:00.000';
+
 SELECT * FROM LichLamViec 
-        WHERE MaNS = 1 AND Thoigiantrong = '2022-12-21T21:15:00'
+        WHERE MaNS = 2 AND Thoigiantrong = '2023-01-02 09:30:00.000'
 INSERT INTO LichLamViec (Thoigiantrong, MaNS)
 VALUES ('2022-12-21T21:15:00', 1); -- Thay thế 1 bằng giá trị thực của MaNS
 SELECT * FROM HoSoBenhAn WHERE HotenKH = 'Dat'
@@ -265,7 +277,7 @@ FOREIGN KEY (MaKH) REFERENCES KhachHang(MaKH);
 -- Đăng nhập
 go
 CREATE PROCEDURE DangNhapKhachHang
-    @TenDangNhap NVARCHAR(50),
+    @p_maKhachHang NVARCHAR(50),
     @p_matKhau NVARCHAR(50)
 AS
 BEGIN
@@ -278,7 +290,7 @@ BEGIN
 
         SELECT @Exists = COUNT(*)
         FROM TaiKhoan
-        WHERE SDT = @TenDangNhap AND Matkhau = @p_matKhau;
+        WHERE MaKH = @p_maKhachHang AND Matkhau = @p_matKhau;
 
         IF @Exists > 0
         BEGIN
@@ -301,12 +313,11 @@ BEGIN
 END;
 
 
-
 -- Đăng kí khách hàng
 go
 
 CREATE PROCEDURE DangKyKhachHang
-    --@p_maKhachHang INT,
+    @p_maKhachHang INT,
     @p_hoTen NVARCHAR(255),
     @p_ngaySinh DATE,
     @p_diaChi NVARCHAR(255),
@@ -322,12 +333,12 @@ BEGIN
         DECLARE @existingUser INT;
         SELECT @existingUser = COUNT(*)
         FROM KhachHang
-        WHERE SDT = @p_soDienThoai;
+        WHERE MaKH = @p_maKhachHang;
 
         IF @existingUser = 0
         BEGIN
-            INSERT INTO KhachHang (HotenKH, ngaySinh, diaChi, SDT, matKhau)
-            VALUES (@p_hoTen, @p_ngaySinh, @p_diaChi, @p_soDienThoai, @p_matKhau);
+            INSERT INTO KhachHang (MaKH, HotenKH, ngaySinh, diaChi, SDT, matKhau)
+            VALUES (@p_maKhachHang, @p_hoTen, @p_ngaySinh, @p_diaChi, @p_soDienThoai, @p_matKhau);
             SELECT 'Đăng ký thành công!' AS result;
         END
         ELSE
@@ -344,39 +355,111 @@ BEGIN
         -- Xử lý các lỗi tại đây, có thể ghi log hoặc thông báo lỗi.
         SELECT ERROR_MESSAGE() AS ErrorMessage, ERROR_NUMBER() AS ErrorNumber;
     END CATCH
-END;	
+END;
 
 go
 
 -- Đặt lich hẹn 
 
+--CREATE PROCEDURE DatLichHen
+--    @p_maNhaSi NVARCHAR(50),
+--    @p_maKhachHang NVARCHAR(50),
+--    @p_ngayGio DATETIME,
+--    @p_diaChi NVARCHAR(50)
+--AS
+--BEGIN
+--    BEGIN TRY
+--        BEGIN TRANSACTION;
+
+--        SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+
+--        DECLARE @existingAppointment INT;
+--        SELECT @existingAppointment = COUNT(*)
+--        FROM HeThongDatLichHen
+--        WHERE MaNS = @p_maNhaSi AND MaKH = @p_maKhachHang;
+
+--        IF @existingAppointment = 0
+--        BEGIN
+--            INSERT INTO HeThongDatLichHen (MaNS, MaKH, Ngaygio, Diachi)
+--            VALUES (@p_maNhaSi, @p_maKhachHang, @p_ngayGio, @p_diaChi);
+--            SELECT 'Đặt lịch hẹn thành công!' AS result;
+--        END
+--        ELSE
+--        BEGIN
+--            SELECT 'Lịch hẹn đã tồn tại, vui lòng chọn ngày giờ khác.' AS result;
+--        END
+
+--        COMMIT;
+--    END TRY
+--    BEGIN CATCH
+--        IF @@TRANCOUNT > 0
+--            ROLLBACK;
+
+--        -- Xử lý các lỗi tại đây, có thể ghi log hoặc thông báo lỗi.
+--        SELECT ERROR_MESSAGE() AS ErrorMessage, ERROR_NUMBER() AS ErrorNumber;
+--    END CATCH
+--END;
 CREATE PROCEDURE DatLichHen
-    @p_maNhaSi NVARCHAR(50),
-    @p_maKhachHang NVARCHAR(50),
+    @p_maNhaSi INT,
+    @p_maKhachHang INT,
     @p_ngayGio DATETIME,
-    @p_diaChi NVARCHAR(50)
+    @p_diaChi NVARCHAR(50),
+    @p_hoten NVARCHAR(255),
+    @p_sdt INT,
+    @p_ngaysinh DATE,
+    @p_maDV INT
 AS
 BEGIN
+    SET NOCOUNT ON;
+    DECLARE @outputMessage NVARCHAR(255);
+
     BEGIN TRY
         BEGIN TRANSACTION;
+        SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 
-        SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+        -- Check if customer exists
+        IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE MaKH = @p_maKhachHang)
+        BEGIN
+            -- Set the error message
+            SET @outputMessage = 'Khách hàng không tồn tại.';
+            ROLLBACK;
+            RETURN;
+        END
 
+        -- Check if dentist exists
+        IF NOT EXISTS (SELECT 1 FROM NhaSi WHERE MaNS = @p_maNhaSi)
+        BEGIN
+            -- Set the error message
+            SET @outputMessage = 'Nha sĩ không tồn tại.';
+            ROLLBACK;
+            RETURN;
+        END
+
+        -- Check dentist's availability
         DECLARE @existingAppointment INT;
         SELECT @existingAppointment = COUNT(*)
-        FROM HeThongDatLichHen
-        WHERE MaNS = @p_maNhaSi AND MaKH = @p_maKhachHang;
+        FROM LichLamViec
+        WHERE MaNS = @p_maNhaSi AND Thoigiantrong = @p_ngayGio;
 
         IF @existingAppointment = 0
         BEGIN
-            INSERT INTO HeThongDatLichHen (MaNS, MaKH, Ngaygio, Diachi)
-            VALUES (@p_maNhaSi, @p_maKhachHang, @p_ngayGio, @p_diaChi);
-            SELECT 'Đặt lịch hẹn thành công!' AS result;
+            -- Set the error message
+            SET @outputMessage = 'Nha sĩ không có lịch làm việc vào thời điểm này.';
+            ROLLBACK;
+            RETURN;
         END
-        ELSE
-        BEGIN
-            SELECT 'Lịch hẹn đã tồn tại, vui lòng chọn ngày giờ khác.' AS result;
-        END
+
+        -- Insert the appointment
+        INSERT INTO HeThongDatLichHen (MaNS, HotenKH, Ngaygio, Ngaysinh, DiaChi, SDT, MaKH, MaDV)
+        VALUES (@p_maNhaSi, @p_hoten, @p_ngayGio, @p_ngaysinh, @p_diaChi, @p_sdt, @p_maKhachHang, @p_maDV);
+
+        -- Delete the availability from LichLamViec
+        DELETE FROM LichLamViec 
+        WHERE MaNS = @p_maNhaSi AND Thoigiantrong = @p_ngayGio;
+
+        -- Update the availability by inserting into LichLamViec
+        INSERT INTO LichLamViec (Thoigianlamviec, MaNS)
+        VALUES (@p_ngayGio, @p_maNhaSi);
 
         COMMIT;
     END TRY
@@ -384,13 +467,84 @@ BEGIN
         IF @@TRANCOUNT > 0
             ROLLBACK;
 
-        -- Xử lý các lỗi tại đây, có thể ghi log hoặc thông báo lỗi.
-        SELECT ERROR_MESSAGE() AS ErrorMessage, ERROR_NUMBER() AS ErrorNumber;
+        -- Set the error message
+        SET @outputMessage = 'Đã xảy ra lỗi trong quá trình xử lý: ' + ERROR_MESSAGE();
     END CATCH
+
+    -- Return the output message
+    SELECT @outputMessage AS result;
 END;
 
 
+
+
+
 go
+SELECT COUNT(*)
+        FROM LichLamViec
+        WHERE MaNS = 7 AND Thoigiantrong = '2023-02-01T08:00:00';
+select * from KhachHang
+-- Khai báo biến để lưu kết quả từ stored procedure
+DECLARE @result NVARCHAR(MAX);
+
+-- Gọi stored procedure DatLichHen với các tham số tương ứng
+EXEC @result = DatLichHen
+    @p_maNhaSi = 7,  -- Thay thế bằng giá trị MaNS thực tế
+    @p_maKhachHang = 2,  -- Thay thế bằng giá trị MaKH thực tế
+    @p_ngayGio = '2023-02-01T08:00:00',  -- Thay thế bằng giá trị ngày và giờ thực tế
+    @p_diaChi = '123 Street, City',  -- Thay thế bằng giá trị địa chỉ thực tế
+    @p_hoten = 'Khang',  -- Thay thế bằng giá trị tên khách hàng thực tế
+    @p_sdt = 001,  -- Thay thế bằng giá trị số điện thoại thực tế
+    @p_ngaysinh = '1990-01-01',  -- Thay thế bằng giá trị ngày sinh thực tế
+    @p_maDV = 3;  -- Thay thế bằng giá trị MaDV thực tế
+
+-- In kết quả từ stored procedure
+SELECT @result AS Result;
+
+DECLARE 
+    @p_maNhaSi INT,
+    @p_maKhachHang INT,
+    @p_ngayGio DATETIME,
+    @p_diaChi NVARCHAR(50),
+    @p_hoten NVARCHAR(255),
+    @p_sdt INT,
+    @p_ngaysinh DATE,
+    @p_maDV INT;
+
+-- Đặt giá trị cho các tham số
+SET @p_maNhaSi = 7; -- Giả sử giá trị là 1
+SET @p_maKhachHang = 6; -- Giả sử giá trị là 2
+SET @p_ngayGio = '2023-02-01T08:00:00'; -- Giả sử giá trị là ngày giờ mong muốn
+SET @p_diaChi = '123 Đường ABC, Quận XYZ';
+SET @p_hoten = 'Dat2';
+SET @p_sdt = 1;
+SET @p_ngaysinh = '1990/01/01'; -- Giả sử giá trị là ngày sinh mong muốn
+SET @p_maDV = 3; -- Giả sử giá trị là 3
+
+-- Thực thi stored procedure
+EXEC DatLichHen 
+    @p_maNhaSi,
+    @p_maKhachHang,
+    @p_ngayGio,
+    @p_diaChi,
+    @p_hoten,
+    @p_sdt,
+    @p_ngaysinh,
+    @p_maDV;
+	COMMIT;
+DECLARE @Soluongton INT = 100;
+DECLARE @HSD DATE = '2023-12-31';
+DECLARE @TenThuoc NVARCHAR(50) = 'Paracetamolkhang';
+DECLARE @Donvitinh NVARCHAR(50) = 'Tablet';
+DECLARE @Chidinh NVARCHAR(50) = 'Pain relief';
+
+-- Execute the stored procedure
+EXEC sp_ThemThuoc
+   @Soluongton,
+   @HSD,
+   @TenThuoc,
+   @Donvitinh,
+   @Chidinh;
 
 -- Xem lịch hẹn 
 CREATE PROCEDURE XemDanhSachLichHenTheoKhachHang
@@ -434,34 +588,76 @@ go
 
 -- Sửa thông tin cá nhân
 CREATE PROCEDURE SuaThongTinCaNhanKhachHang
-    @p_maKhachHang NVARCHAR(50),
+    @p_maKhachHang INT,
     @p_hoTen NVARCHAR(50),
     @p_ngaySinh DATE,
     @p_diaChi NVARCHAR(50),
+    @p_matKhau NVARCHAR(50),
     @p_soDienThoai INT
+   
 AS
 BEGIN
-    IF NOT EXISTS (
-        SELECT 1
-        FROM KhachHang
-        WHERE MaKH = @p_maKhachHang
-    )
-    BEGIN
-        SELECT 'Mã khách hàng không tồn tại.' AS result;
-        RETURN;
-    END
-    UPDATE KhachHang
-    SET
-        HotenKH = @p_hoTen,
-        Ngaysinh = @p_ngaySinh,
-        Diachi = @p_diaChi,
-        SDT = @p_soDienThoai
-    WHERE MaKH = @p_maKhachHang;
+    SET NOCOUNT ON; -- Tắt thông báo số hàng bị ảnh hưởng để tránh lỗi số hàng
+	 DECLARE @outputMessage NVARCHAR(255);
+    BEGIN TRY
+        BEGIN TRANSACTION;
 
-    SELECT 'Sửa thông tin cá nhân thành công.' AS result;
+        -- Check if customer exists
+        IF NOT EXISTS (
+            SELECT 1
+            FROM KhachHang
+            WHERE MaKH = @p_maKhachHang
+        )
+        BEGIN
+            SET @outputMessage = 'Mã khách hàng không tồn tại.';
+            ROLLBACK; -- Rollback transaction
+            RETURN;
+        END
+
+        -- Update customer information
+        UPDATE KhachHang
+        SET
+            HotenKH = @p_hoTen,
+            Ngaysinh = @p_ngaySinh,
+            Diachi = @p_diaChi,
+            Matkhau = @p_matKhau,
+            SDT = @p_soDienThoai
+        WHERE MaKH = @p_maKhachHang;
+
+        SET @outputMessage = 'Sửa thông tin cá nhân thành công.';
+
+        COMMIT; -- Commit transaction
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK; -- Rollback transaction
+
+        -- Handle errors, log, or return an appropriate error message
+        SET @outputMessage = 'Đã xảy ra lỗi trong quá trình xử lý: ' + ERROR_MESSAGE();
+    END CATCH
 END;
 
 go
+DECLARE @maKhachHang INT = 1;
+DECLARE @hoTen NVARCHAR(50) = N'DatVip';
+DECLARE @ngaySinh DATE = '1990/01/01';
+DECLARE @diaChi NVARCHAR(50) = N'CuChi';
+DECLARE @matKhau NVARCHAR(50) = N'1';
+DECLARE @soDienThoai INT = 12;
+
+
+-- Execute the stored procedure
+EXEC SuaThongTinCaNhanKhachHang
+    @p_maKhachHang = @maKhachHang,
+    @p_hoTen = @hoTen,
+    @p_ngaySinh = @ngaySinh,
+    @p_diaChi = @diaChi,
+    @p_matKhau = @matKhau,
+    @p_soDienThoai = @soDienThoai;
+
+
+-- Display the output message
+SELECT @outputMessage AS ResultMessage;
 
 --Xem hồ sơ bệnh án
 CREATE PROCEDURE XemHoSoBenhAnTheoMaKH
@@ -829,42 +1025,50 @@ go
 
 -- Thêm thuốc
 CREATE PROCEDURE sp_ThemThuoc
-   -- @MaThuoc NVARCHAR(50),
     @Soluongton INT,
     @HSD DATE,
     @TenThuoc NVARCHAR(50),
     @Donvitinh NVARCHAR(50),
     @Chidinh NVARCHAR(50)
+
 AS
 BEGIN
     SET NOCOUNT ON;
-    IF NOT EXISTS (SELECT 1 FROM Thuoc WHERE TenThuoc = @TenThuoc)
-	BEGIN 
-		DECLARE @FIRSTDRUG_SOLUONG INT = @Soluongton,  @FIRSTDRUG_HSD DATE = @HSD,  @FIRSTDRUG_TENTHUOC NVARCHAR(50) = @TenThuoc,  @FIRSTDRUG_DONVI NVARCHAR(50) = @Donvitinh, @FIRSTDRUG_CHIDINH NVARCHAR(50) = @Chidinh;
-		BEGIN TRAN
-			IF(@Soluongton = @FIRSTDRUG_SOLUONG AND @HSD = @FIRSTDRUG_HSD AND  @TenThuoc = @FIRSTDRUG_TENTHUOC AND @Donvitinh = @FIRSTDRUG_DONVI AND  @Chidinh = @FIRSTDRUG_CHIDINH)
-				BEGIN
-					INSERT INTO Thuoc (Soluongton, HSD, TenThuoc, Donvitinh, Chidinh)
-					VALUES (@Soluongton, @HSD, @TenThuoc, @Donvitinh, @Chidinh);
-					PRINT 'Đã thêm loại thuốc thành công.';
-				END
-			ELSE
-				BEGIN
-					ROLLBACK
-				END
-		COMMIT TRAN
-	END
-    ELSE
-    BEGIN
-        PRINT 'Loại thuốc có mã ' + @TenThuoc + ' đã tồn tại. Vui lòng chọn mã khác.';
-    END
+	DECLARE @outputMessage NVARCHAR(255);
+    BEGIN TRY
+        BEGIN TRANSACTION;
+        SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
 
+        IF NOT EXISTS (SELECT 1 FROM Thuoc WHERE TenThuoc = @TenThuoc)
+        BEGIN
+            INSERT INTO Thuoc (Soluongton, HSD, TenThuoc, Donvitinh, Chidinh)
+            VALUES (@Soluongton, @HSD, @TenThuoc, @Donvitinh, @Chidinh);
+
+            SET @outputMessage = 'Đã thêm loại thuốc thành công.';
+
+            COMMIT;
+        END
+        ELSE
+        BEGIN
+            -- Loại thuốc đã tồn tại, set thông báo
+            SET @outputMessage = 'Loại thuốc có tên ' + @TenThuoc + ' đã tồn tại. Vui lòng chọn tên khác.';
+
+            ROLLBACK;
+        END
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK;
+
+        -- Xử lý lỗi, set thông báo
+        SET @outputMessage = 'Đã xảy ra lỗi trong quá trình xử lý: ' + ERROR_MESSAGE();
+    END CATCH
 END;
 go
 -- Declare variables with sample values
-DECLARE @Soluongton INT = 100;
+DECLARE @Soluongton INT = 200;
 DECLARE @HSD DATE = '2023-12-31';
-DECLARE @TenThuoc NVARCHAR(50) = 'Paracetamolkhang';
+DECLARE @TenThuoc NVARCHAR(50) = 'Hiroxin';
 DECLARE @Donvitinh NVARCHAR(50) = 'Tablet';
 DECLARE @Chidinh NVARCHAR(50) = 'Pain relief';
 
@@ -876,62 +1080,148 @@ EXEC sp_ThemThuoc
    @Donvitinh,
    @Chidinh;
 
- go
 -- Sửa thuốc
 CREATE PROCEDURE SuaThuoc
-    --@MaThuoc NVARCHAR(50),
     @Soluongton INT,
     @HSD DATE,
     @TenThuoc NVARCHAR(50),
     @Donvitinh NVARCHAR(50),
     @Chidinh NVARCHAR(50)
+   
 AS
 BEGIN
     SET NOCOUNT ON;
-    IF EXISTS (SELECT 1 FROM Thuoc WHERE TenThuoc = @TenThuoc)
-    BEGIN
-        UPDATE Thuoc
-        SET
-            Soluongton = @Soluongton,
-            HSD = @HSD,
-            TenThuoc = @TenThuoc,
-            Donvitinh = @Donvitinh,
-            Chidinh = @Chidinh
-        WHERE TenThuoc = @TenThuoc;
+		DECLARE @outputMessage NVARCHAR(255);
 
-        PRINT 'Đã cập nhật thông tin thuốc thành công.';
-    END
-    ELSE
-    BEGIN
-        PRINT 'Không tìm thấy loại thuốc có mã ' + @MaThuoc + '.';
-    END
+	SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        IF EXISTS (SELECT 1 FROM Thuoc WHERE TenThuoc = @TenThuoc)
+        BEGIN
+            UPDATE Thuoc
+            SET
+                Soluongton = @Soluongton,
+                HSD = @HSD,
+                Donvitinh = @Donvitinh,
+                Chidinh = @Chidinh
+            WHERE TenThuoc = @TenThuoc;
+
+            SET @outputMessage = 'Đã cập nhật thông tin thuốc thành công.';
+
+            COMMIT;
+        END
+        ELSE
+        BEGIN
+            -- Không tìm thấy loại thuốc, set thông báo
+            SET @outputMessage = 'Không tìm thấy loại thuốc có mã ' + @TenThuoc + '.';
+
+            ROLLBACK;
+        END
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK;
+
+        -- Xử lý lỗi, set thông báo
+        SET @outputMessage = 'Đã xảy ra lỗi trong quá trình xử lý: ' + ERROR_MESSAGE();
+    END CATCH
 END;
-go
 
+go
+DECLARE @Soluongton INT = 200;
+DECLARE @HSD DATE = '2023-12-31';
+DECLARE @TenThuoc NVARCHAR(50) = 'kichduc';
+DECLARE @Donvitinh NVARCHAR(50) = 'Tablet';
+DECLARE @Chidinh NVARCHAR(50) = 'Pain relief';
+
+-- Execute the stored procedure
+EXECUTE SuaThuoc
+   @Soluongton,
+   @HSD,
+   @TenThuoc,
+   @Donvitinh,
+   @Chidinh;
 -- Xóa thuốc
 CREATE PROCEDURE sp_XoaThuoc
-    @MaThuoc NVARCHAR(50)
+    @MaThuoc INT
 AS
 BEGIN
     SET NOCOUNT ON;
-    IF EXISTS (SELECT 1 FROM Thuoc WHERE MaThuoc = @MaThuoc)
-    BEGIN
-        DELETE FROM Thuoc
-        WHERE MaThuoc = @MaThuoc;
+    DECLARE @outputMessage NVARCHAR(255);
 
-        PRINT 'Đã xóa loại thuốc thành công.';
-    END
-    ELSE
-    BEGIN
-        PRINT 'Không tìm thấy loại thuốc có mã ' + @MaThuoc + '.';
-    END
+    SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        IF EXISTS (SELECT 1 FROM Thuoc WITH (UPDLOCK, HOLDLOCK) WHERE MaThuoc = @MaThuoc)
+        BEGIN
+            DELETE FROM Thuoc
+            WHERE MaThuoc = @MaThuoc;
+
+            SET @outputMessage = 'Đã xóa loại thuốc thành công.';
+        END
+        ELSE
+        BEGIN
+            SET @outputMessage = 'Không tìm thấy loại thuốc có mã ' + @MaThuoc + '.';
+        END
+
+        COMMIT;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK;
+
+        SET @outputMessage = 'Đã xảy ra lỗi trong quá trình xử lý: ' + ERROR_MESSAGE();
+    END CATCH
 END;
+
 go
 
 -- Thêm khách hàng
 CREATE PROCEDURE sp_ThemKhachHang
-    @MaKH NVARCHAR(50),
     @HotenKH NVARCHAR(50),
+    @Ngaysinh DATE,
+    @Diachi NVARCHAR(50),
+    @Matkhau NVARCHAR(50),
+    @SDT INT
+
+AS
+BEGIN
+    SET NOCOUNT ON;
+	DECLARE @outputMessage NVARCHAR(255);
+
+	SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE SDT = @SDT)
+        BEGIN
+            INSERT INTO KhachHang (HotenKH, Ngaysinh, Diachi, Matkhau, SDT)
+            VALUES ( @HotenKH, @Ngaysinh, @Diachi, @Matkhau, @SDT);
+
+            SET @outputMessage = 'Đã thêm khách hàng thành công.';
+        END
+        ELSE
+        BEGIN
+            SET @outputMessage = 'Khách hàng có số điện thoại ' + @SDT + ' đã tồn tại.';
+        END
+
+        COMMIT;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK;
+
+        SET @outputMessage = 'Đã xảy ra lỗi trong quá trình xử lý: ' + ERROR_MESSAGE();
+    END CATCH
+END;
+
+go
+
+-- Thêm nha sĩ
+CREATE PROCEDURE sp_ThemNhaSi
+    @HotenNS NVARCHAR(50),
     @Ngaysinh DATE,
     @Diachi NVARCHAR(50),
     @Matkhau NVARCHAR(50),
@@ -939,66 +1229,75 @@ CREATE PROCEDURE sp_ThemKhachHang
 AS
 BEGIN
     SET NOCOUNT ON;
-    IF NOT EXISTS (SELECT 1 FROM KhachHang WHERE MaKH = @MaKH)
-    BEGIN
-        INSERT INTO KhachHang (MaKH, HotenKH, Ngaysinh, Diachi, Matkhau, SDT)
-        VALUES (@MaKH, @HotenKH, @Ngaysinh, @Diachi, @Matkhau, @SDT);
+	DECLARE @outputMessage NVARCHAR(255);
 
-        PRINT 'Đã thêm khách hàng thành công.';
-    END
-    ELSE
-    BEGIN
-        PRINT 'Khách hàng có mã ' + @MaKH + ' đã tồn tại.';
-    END
+	SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        IF NOT EXISTS (SELECT 1 FROM NhaSi WHERE  SDT  = @SDT)
+        BEGIN
+            INSERT INTO NhaSi (HotenNS, Ngaysinh, Diachi, Matkhau,SDT)
+            VALUES (@HotenNS, @Ngaysinh, @Diachi, @Matkhau,@SDT);
+
+            SET @outputMessage = 'Đã thêm nha sĩ thành công.';
+        END
+        ELSE
+        BEGIN
+            SET @outputMessage = 'Nha sĩ có số điện thoại ' + @SDT + ' đã tồn tại.';
+        END
+
+        COMMIT;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK;
+
+        SET @outputMessage = 'Đã xảy ra lỗi trong quá trình xử lý: ' + ERROR_MESSAGE();
+    END CATCH
 END;
-go
 
--- Thêm nha sĩ
-CREATE PROCEDURE sp_ThemNhaSi
-    @MaNS NVARCHAR(50),
-    @HotenNS NVARCHAR(50),
-    @Ngaysinh DATE,
-    @Diachi NVARCHAR(50),
-    @Matkhau NVARCHAR(50)
-AS
-BEGIN
-    SET NOCOUNT ON;
-    IF NOT EXISTS (SELECT 1 FROM NhaSi WHERE MaNS = @MaNS)
-    BEGIN
-        INSERT INTO NhaSi (MaNS, HotenNS, Ngaysinh, Diachi, Matkhau)
-        VALUES (@MaNS, @HotenNS, @Ngaysinh, @Diachi, @Matkhau);
-
-        PRINT 'Đã thêm nha sĩ thành công.';
-    END
-    ELSE
-    BEGIN
-        PRINT 'Nha sĩ có mã ' + @MaNS + ' đã tồn tại.';
-    END
-END;
 go
 
 -- Thêm nhân viên
 CREATE PROCEDURE sp_ThemNhanVien
-    @MaNV NVARCHAR(50),
     @HotenNV NVARCHAR(50),
+	@Ngaysinh Date,
     @SDT INT,
     @Matkhau NVARCHAR(50),
-    @MaKH NVARCHAR(50)
+    @Diachi NVARCHAR(50)
+    
 AS
 BEGIN
     SET NOCOUNT ON;
-    IF NOT EXISTS (SELECT 1 FROM NhanVien WHERE MaNV = @MaNV)
-    BEGIN
-        INSERT INTO NhanVien (MaNV, HotenNV, SDT, Matkhau, MaKH)
-        VALUES (@MaNV, @HotenNV, @SDT, @Matkhau, @MaKH);
+	DECLARE @outputMessage NVARCHAR(255);
 
-        PRINT 'Đã thêm nhân viên thành công.';
-    END
-    ELSE
-    BEGIN
-        PRINT 'Nhân viên có mã ' + @MaNV + ' đã tồn tại.';
-    END
+	SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        IF NOT EXISTS (SELECT 1 FROM NhanVien WHERE SDT = @SDT)
+        BEGIN
+            INSERT INTO NhanVien (HotenNV, SDT, Matkhau, Ngaysinh,Diachi)
+            VALUES (@HotenNV, @SDT, @Matkhau, @Ngaysinh,@SDT);
+
+            SET @outputMessage = 'Đã thêm nhân viên thành công.';
+        END
+        ELSE
+        BEGIN
+            SET @outputMessage = 'Nhân viên có số điện thoại ' + @SDT + ' đã tồn tại.';
+        END
+
+        COMMIT;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK;
+
+        SET @outputMessage = 'Đã xảy ra lỗi trong quá trình xử lý: ' + ERROR_MESSAGE();
+    END CATCH
 END;
+
 
 
 
