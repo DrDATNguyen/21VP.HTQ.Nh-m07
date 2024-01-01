@@ -491,25 +491,16 @@ app.post('/appointment', async (req, res) => {
     const SDT = parseInt(req.body.SDT, 10);
     const MaDV = req.body.selectedService;
     const maNS = req.body.selectedDoctor; // Tên nha sĩ từ người dùng
-    const ngay = req.body.date;
+    // const ngay = req.body.date;
     const HotenKH = req.body.fullname;
-    const gio = req.body.time;
-    const ngayGio = `${ngay.split('/').reverse().join('-')}T${gio}:00`;
+    // const gio = req.body.time;
+    // const ngayGio = `${ngay.split('/').reverse().join('-')}T${gio}:00`;
+    const ngayGio =req.body.selectedDatetime;
     console.log(SDT);
-    // console.log(tenNS);
-    console.log(ngay);
-    console.log(gio);
     console.log(ngayGio);
     console.log(MaDV);
     console.log(maNS);
     console.log(HotenKH);
-
-
-    // Check if required fields are present
-    // if (isNaN(SDT) || !tenNS || !ngayGio || !req.body.HotenKH || !req.body.Ngaysinh || !req.body.DiaChi) {
-    //   return res.status(400).json({ error: 'Invalid or missing fields in the request.' });
-    // }
-
     // Lấy MaKH từ SDT
     const maKH = await getMaKHBySDT(SDT);
 
@@ -555,6 +546,25 @@ app.post('/appointment', async (req, res) => {
     insertAppointmentRequest.input('MaDV', sql.Int, MaDV);
 
     await insertAppointmentRequest.query(insertAppointmentQuery);
+    // Thực hiện truy vấn để xóa thời gian trống trong bảng LichLamViec
+    const deleteAvailabilityQuery = `
+        DELETE FROM LichLamViec 
+        WHERE MaNS = @maNS AND Thoigiantrong = @ngayGio
+    `;
+    const deleteAvailabilityRequest = new sql.Request();
+    deleteAvailabilityRequest.input('maNS', sql.Int, maNS);
+    deleteAvailabilityRequest.input('ngayGio', sql.DateTime, ngayGio);
+    await deleteAvailabilityRequest.query(deleteAvailabilityQuery);
+
+    // Thực hiện truy vấn để dồn giá trị cột Thoigiantrong
+    const updateAvailabilityQuery = `
+    INSERT INTO LichLamViec ( Thoigianlamviec, MaNS)
+    VALUES (@ngayGio, @maNS);
+    `;
+    const updateAvailabilityRequest = new sql.Request();
+    updateAvailabilityRequest.input('maNS', sql.Int, maNS);
+    updateAvailabilityRequest.input('ngayGio', sql.DateTime, ngayGio);
+    await updateAvailabilityRequest.query(updateAvailabilityQuery);
 
     // Trả về thông báo thành công
     res.status(200).json({ message: 'Đặt lịch hẹn thành công.' });
@@ -1194,7 +1204,7 @@ app.get('/viewMedicalRecordUser', async (req, res) => {
       await sql.close();
   }
 });
-app.get('/getServicesAndDoctors', async (req, res) => {
+app.get('/getServicesAndDoctorsAndDateTime', async (req, res) => {
   try {
       const connection = await sql.connect(config);
 
@@ -1208,10 +1218,13 @@ app.get('/getServicesAndDoctors', async (req, res) => {
       const doctorsResult = await connection.query(doctorsQuery);
       const doctors = doctorsResult.recordset;
 
-      res.json({ services, doctors });
+      const datetimeQuery = 'SELECT * FROM LichLamViec';
+      const datetimeResult = await connection.query(datetimeQuery);
+      const datetimes = datetimeResult.recordset;
+      res.json({ services, doctors,datetimes });
   } catch (error) {
       console.error('Error fetching services and doctors:', error);
-      res.status(500).json({ error: 'An error occurred while fetching services and doctors.' });
+      res.status(500).json({ error: 'An error occurred while fetching services and doctors and datetimes.' });
   } finally {
       await sql.close();
   }
