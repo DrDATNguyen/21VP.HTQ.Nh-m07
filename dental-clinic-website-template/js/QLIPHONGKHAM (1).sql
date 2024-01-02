@@ -14,6 +14,9 @@ CREATE ROLE admin_role;
 CREATE USER customer_user;
 
 ALTER USER customer_user ADD TO ROLE customer_role;
+ALTER USER employee_user ADD TO ROLE employee_role;
+ALTER USER pharmacist_user ADD TO ROLE pharmacist_role;
+ALTER USER admin_user ADD TO ROLE admin_role;
 
 -- Grant permissions to the customer role/user
 GRANT SELECT ON KhachHang TO customer_role;
@@ -277,7 +280,7 @@ FOREIGN KEY (MaKH) REFERENCES KhachHang(MaKH);
 -- Đăng nhập
 go
 CREATE PROCEDURE DangNhapKhachHang
-    @p_maKhachHang NVARCHAR(50),
+    @TenDangNhap NVARCHAR(50),
     @p_matKhau NVARCHAR(50)
 AS
 BEGIN
@@ -290,7 +293,7 @@ BEGIN
 
         SELECT @Exists = COUNT(*)
         FROM TaiKhoan
-        WHERE MaKH = @p_maKhachHang AND Matkhau = @p_matKhau;
+        WHERE SDT = @TenDangNhap AND Matkhau = @p_matKhau;
 
         IF @Exists > 0
         BEGIN
@@ -317,7 +320,7 @@ END;
 go
 
 CREATE PROCEDURE DangKyKhachHang
-    @p_maKhachHang INT,
+    --@p_maKhachHang INT,
     @p_hoTen NVARCHAR(255),
     @p_ngaySinh DATE,
     @p_diaChi NVARCHAR(255),
@@ -333,12 +336,12 @@ BEGIN
         DECLARE @existingUser INT;
         SELECT @existingUser = COUNT(*)
         FROM KhachHang
-        WHERE MaKH = @p_maKhachHang;
+        WHERE SDT = @p_soDienThoai;
 
         IF @existingUser = 0
         BEGIN
-            INSERT INTO KhachHang (MaKH, HotenKH, ngaySinh, diaChi, SDT, matKhau)
-            VALUES (@p_maKhachHang, @p_hoTen, @p_ngaySinh, @p_diaChi, @p_soDienThoai, @p_matKhau);
+            INSERT INTO KhachHang (HotenKH, ngaySinh, diaChi, SDT, matKhau)
+            VALUES (@p_hoTen, @p_ngaySinh, @p_diaChi, @p_soDienThoai, @p_matKhau);
             SELECT 'Đăng ký thành công!' AS result;
         END
         ELSE

@@ -223,65 +223,78 @@ app.post('/login',async (req, res) => {
 //   }
 // });
 app.post('/signup', async (req, res) => {
-    try {
-      // Kết nối đến cơ sở dữ liệu
-      const connection = await sql.connect(config);
-  
-      // Kiểm tra trạng thái kết nối
-      if (!connection.connected) {
-        console.log('Failed to connect to SQL Server.');
-        throw new Error('Không thể kết nối đến cơ sở dữ liệu.');
-      }
-  
-      // Lấy thông tin từ body của request
-      const fullName = req.body.fullName;
-      const password = req.body.password;
-      const birthDate = req.body.birthDate;
-      const address = req.body.address;
-      const phoneNumber = req.body.phoneNumber;
-  
-      // Kiểm tra xem số điện thoại đã tồn tại chưa
-      const checkPhoneNumberQuery = `SELECT * FROM KhachHang WHERE SDT = @phoneNumber`;
-      const checkPhoneNumberRequest = new sql.Request();
-      checkPhoneNumberRequest.input('phoneNumber', sql.NVarChar, phoneNumber);
-  
-      const existingCustomer = await checkPhoneNumberRequest.query(checkPhoneNumberQuery);
-  
-      if (existingCustomer.recordset.length > 0) {
-        return res.status(400).json({ error: 'Số điện thoại đã được sử dụng.' });
-      }
-  
-      // Thực hiện truy vấn để thêm khách hàng mới
-      const insertQuery = `
-        INSERT INTO KhachHang (HotenKH, Ngaysinh, Diachi, SDT, Matkhau)
-        VALUES ('${fullName}', '${birthDate}', '${address}', '${phoneNumber}', '${password}')
-      `;
-  
-      const insertRequest = new sql.Request();
-      insertRequest.input('fullName', sql.NVarChar, fullName);
-      insertRequest.input('birthDate', sql.Date, birthDate);
-      insertRequest.input('address', sql.NVarChar, address);
-      insertRequest.input('phoneNumber', sql.NVarChar, phoneNumber);
-      insertRequest.input('password', sql.NVarChar, password);
-  
-      const result = await insertRequest.query(insertQuery);
-      console.log('Insert successful:', result);
-  
-      // Trả về thông báo thành công
-      res.status(200).json({ message: 'Đăng ký tài khoản thành công.' });
-    } catch (error) {
-      if (error.name === 'RequestError' && error.number === 2627) {
-        // Xử lý lỗi khi vi phạm ràng buộc duy nhất (số điện thoại trùng lặp)
-        res.status(400).json({ error: 'Số điện thoại đã được sử dụng.' });
-      } else {
-        console.error('Error during signup:', error);
-        res.status(500).json({ error: 'Đã xảy ra lỗi trong quá trình xử lý.' });
-      }
-    } finally {
-      // Đảm bảo đóng kết nối sau khi hoàn thành
-      await sql.close();
+  try {
+    // Kết nối đến cơ sở dữ liệu
+    const connection = await sql.connect(config);
+
+    // Kiểm tra trạng thái kết nối
+    if (!connection.connected) {
+      console.log('Failed to connect to SQL Server.');
+      throw new Error('Không thể kết nối đến cơ sở dữ liệu.');
     }
-  });
+
+    // Lấy thông tin từ body của request
+    const fullName = req.body.fullName;
+    const password = req.body.password;
+    const birthDate = req.body.birthDate;
+    const address = req.body.address;
+    const phoneNumber = req.body.phoneNumber;
+
+    // Kiểm tra xem số điện thoại đã tồn tại chưa
+    
+    const signinQuery = `
+      EXEC DangKyKhachHang
+      @p_hoTen = ${fullName},
+      @p_ngaySinh = ${birthDate},
+      @p_diaChi = = ${address},
+      @p_soDienThoai = ${phoneNumber},
+      @p_matKhau = ${password}
+
+      CREATE LOGIN ${phoneNumber}
+      WITH PASSWORD = ${password},
+      CHECK_POLICY = OFF, CHECK_EXPIRATION = OFF,
+      DEFAULT_ DATABASE = UserDatabase
+
+      CREATE USER ${phoneNumber}
+      FOR LOGIN ${phoneNumber}
+
+      GRANT SELECT, DELETE, UPDATE ON KHACHHANG TO ${phoneNumber}
+      GRANT SELECT, DELETE, UPDATE ON TaiKhoan TO ${phoneNumber}
+      GRANT SELECT, DELETE, UPDATE ON HeThongDatLichHen TO ${phoneNumber}
+      GRANT SELECT ON HoSoBenhAn TO ${phoneNumber}
+      GRANT EXECUTE ON DangNhapKhachHang TO ${phoneNumber}
+      GRANT EXECUTE ON DangKyKhachHang TO ${phoneNumber}
+      GRANT EXECUTE ON DatLichHen TO ${phoneNumber}
+      GRANT EXECUTE ON XemDanhSachLichHenTheoKhachHang TO ${phoneNumber}
+      GRANT EXECUTE ON XemThongTinKhachHangTheoMa TO ${phoneNumber}
+      GRANT EXECUTE ON SuaThongTinCaNhanKhachHang TO ${phoneNumber}
+      GRANT EXECUTE ON XemHoSoBenhAnTheoMaKH TO ${phoneNumber}
+  `;
+    const signinRequest = new sql.Request();
+    signinRequest.input('@p_hoTen', sql.NVarChar, fullName);
+    signinRequest.input('@p_ngaySinh', sql.Date, birthDate);
+    signinRequest.input('@p_diaChi', sql.NVarChar, address);
+    signinRequest.input('@p_soDienThoai', sql.NVarChar, phoneNumber);
+    signinRequest.input('@p_matKhau', sql.NVarChar, password);
+
+    const result = await signinRequest.query(signinQuery);
+    console.log('Insert successful:', result);
+
+    // Trả về thông báo thành công
+    res.status(200).json({ message: 'Đăng ký tài khoản thành công.' });
+  } catch (error) {
+    if (error.name === 'RequestError' && error.number === 2627) {
+      // Xử lý lỗi khi vi phạm ràng buộc duy nhất (số điện thoại trùng lặp)
+      res.status(400).json({ error: 'Số điện thoại đã được sử dụng.' });
+    } else {
+      console.error('Error during signup:', error);
+      res.status(500).json({ error: 'Đã xảy ra lỗi trong quá trình xử lý.' });
+    }
+  } finally {
+    // Đảm bảo đóng kết nối sau khi hoàn thành
+    await sql.close();
+  }
+});
   
 // app.post('/signup', async (req, res) => {
 //   try {
@@ -318,11 +331,17 @@ async function loginUser(username, password) {
     console.log('Failed to connect to SQL Server.');
     throw new Error('Không thể kết nối đến cơ sở dữ liệu.');
   }
-    // Chuẩn bị truy vấn SQL
-    const query = `SELECT * FROM KhachHang WHERE SDT = '${username}' AND Matkhau = '${password}'`;
-
-    // Thực hiện truy vấn
-    const result = await sql.query(query);
+    const loginQuery = `
+    EXEC DangNhapKhachHang
+        @TenDangNhap = ${username},
+        @p_matKhau = ${password},
+    `;
+    
+    const LoginRequest = new sql.Request();
+    LoginRequest.input('@TenDangNhap', sql.NVarChar, username);
+    LoginRequest.input('@p_matKhau', sql.NVarChar, password);
+    
+    const result = await LoginRequest.query(loginQuery);
 
     if (result.recordset.length > 0) {
         // Đăng nhập thành công, trả về dữ liệu người dùng
@@ -640,7 +659,11 @@ app.get('/profile', async (req, res) => {
     console.log(maKH)
     const connection = await sql.connect(config);
     // Thực hiện truy vấn SQL để lấy thông tin khách hàng từ cơ sở dữ liệu
-    const getProfileQuery = `SELECT * FROM KhachHang WHERE MaKH = '${maKH}'`;
+    const getProfileQuery = `
+    EXEC XemHoSoBenhAnTheoMaKH
+      @MaKH = ${maKH},
+    `;
+  
     const getProfileRequest = new sql.Request();
     getProfileRequest.input('maKH', sql.Int, maKH);
     const profileResult = await getProfileRequest.query(getProfileQuery);
@@ -658,6 +681,7 @@ app.get('/profile', async (req, res) => {
     res.status(500).json({ error: 'Đã xảy ra lỗi trong quá trình xử lý.' });
   }
 });
+
 app.post('/profile', async (req, res) => {
   try {
       // Kết nối đến cơ sở dữ liệu
@@ -673,25 +697,23 @@ app.post('/profile', async (req, res) => {
       const diaChi = req.body.diaChi;
       console.log(diaChi)
       const ngaySinh = req.body.ngaySinh;
-      const matkhau = req.body.matkhau;
 
       // Thực hiện truy vấn để cập nhật thông tin người dùng
       const updateProfileQuery = `
-    EXEC SuaThongTinCaNhanKhachHang
-    @p_maKhachHang = '${maKH}',
-    @p_hoTen = N'${hotenKH}',
-    @p_ngaySinh = '${ngaySinh}',
-    @p_diaChi = N'${diaChi}',
-    @p_matKhau = N'${matkhau}',
-    @p_soDienThoai = ${SDT};
-    
-`;
+        EXEC SuaThongTinCaNhanKhachHang
+        @p_maKhachHang = ${maKH},
+        @p_hoTen = ${hotenKH},
+        @p_ngaySinh = ${ngaySinh},
+        @p_diaChi = ${diaChi},
+        @p_soDienThoai = ${SDT},
+      `;
+
       const updateProfileRequest = new sql.Request();
       updateProfileRequest.input('hotenKH', sql.NVarChar, hotenKH);
       updateProfileRequest.input('SDT', sql.Int, SDT);
       updateProfileRequest.input('diaChi', sql.NVarChar, diaChi);
       updateProfileRequest.input('ngaySinh', sql.Date, ngaySinh);
-      const result=await updateProfileRequest.query(updateProfileQuery);
+      await updateProfileRequest.query(updateProfileQuery);
 
       // Thực hiện truy vấn để lấy thông tin khách hàng sau khi cập nhật
     const getUpdatedProfileQuery = `SELECT * FROM KhachHang WHERE MaKH = '${maKH}'`;
@@ -699,15 +721,9 @@ app.post('/profile', async (req, res) => {
     getUpdatedProfileRequest.input('maKH', sql.Int, maKH);
     const updatedProfileResult = await getUpdatedProfileRequest.query(getUpdatedProfileQuery);
     const updatedUserProfile = updatedProfileResult.recordset[0];
-    if (result && result.recordset && result.recordset[0] && result.recordset[0].ResultMessage) {
-      const message = result.recordset[0].ResultMessage;
-      res.render('profile', { userProfile: updatedUserProfile,message });
-  } else {
-       const message= 'Thành công.';
-       res.render('profile', { userProfile: updatedUserProfile,message  });
-  }
+
       // Trả về thông báo thành công và cập nhật thông tin trang profile
-    
+    res.render('profile', { userProfile: updatedUserProfile });
       // res.status(200).json({ message: 'Cập nhật thông tin thành công.' });
   } catch (error) {
       console.error('Error during profile update:', error);
@@ -717,6 +733,7 @@ app.post('/profile', async (req, res) => {
       await sql.close();
   }
 });
+
 app.get('/addDrug', (req, res) => {
   res.render('addDrug');
 
@@ -784,7 +801,7 @@ app.get('/ViewDrugList', async (req, res) => {
   try {
     const connection = await sql.connect(config);
     // Thực hiện truy vấn SQL để lấy dữ liệu thuốc
-    const query = 'SELECT * FROM Thuoc';
+    const query = 'EXEC XemDanhSachThuoc';
     const result = await sql.query(query);
 
     // Render trang .ejs với dữ liệu thuốc
@@ -872,11 +889,12 @@ app.delete('/deleteDrug/:id', async (req, res) => {
 
     // Perform the delete query
     const deleteDrugQuery = `
-    EXEC sp_XoaThuoc @MaThuoc = ${drugId};
-      
+      EXEC sp_XoaThuoc
+      @MaThuoc = ${drugId},
     `;
 
     const deleteDrugRequest = new sql.Request();
+    deleteDrugRequest.que
     await deleteDrugRequest.query(deleteDrugQuery);
 
     // Close the SQL Server connection
@@ -1003,7 +1021,27 @@ app.post('/updateDrug', async (req, res) => {
           @Ngaysinh = '${birthDate}',
           @Diachi = N'${address}',
           @Matkhau = N'${password}',
-          @SDT = ${phoneNumber};
+          @SDT = ${phoneNumber}
+
+          CREATE LOGIN ${phoneNumber}
+          WITH PASSWORD = ${password},
+          CHECK_POLICY = OFF, CHECK_EXPIRATION = OFF,
+          DEFAULT_ DATABASE = UserDatabase
+
+          CREATE USER ${phoneNumber}
+          FOR LOGIN ${phoneNumber}
+
+          GRANT SELECT, DELETE, UPDATE ON KHACHHANG TO ${phoneNumber}
+          GRANT SELECT, DELETE, UPDATE ON TaiKhoan TO ${phoneNumber}
+          GRANT SELECT, DELETE, UPDATE ON HeThongDatLichHen TO ${phoneNumber}
+          GRANT SELECT ON HoSoBenhAn TO ${phoneNumber}
+          GRANT EXECUTE ON DangNhapKhachHang TO ${phoneNumber}
+          GRANT EXECUTE ON DangKyKhachHang TO ${phoneNumber}
+          GRANT EXECUTE ON DatLichHen TO ${phoneNumber}
+          GRANT EXECUTE ON XemDanhSachLichHenTheoKhachHang TO ${phoneNumber}
+          GRANT EXECUTE ON XemThongTinKhachHangTheoMa TO ${phoneNumber}
+          GRANT EXECUTE ON SuaThongTinCaNhanKhachHang TO ${phoneNumber}
+          GRANT EXECUTE ON XemHoSoBenhAnTheoMaKH TO ${phoneNumber}
         `;
         break;
       case 'NhanVien':
@@ -1013,7 +1051,34 @@ app.post('/updateDrug', async (req, res) => {
           @Ngaysinh = '${birthDate}',
           @Diachi = N'${address}',
           @Matkhau = N'${password}',
-          @SDT = ${phoneNumber};
+          @SDT = ${phoneNumber}
+
+          CREATE LOGIN ${phoneNumber}
+          WITH PASSWORD = ${password},
+          CHECK_POLICY = OFF, CHECK_EXPIRATION = OFF,
+          DEFAULT_ DATABASE = UserDatabase
+
+          CREATE USER ${phoneNumber}
+          FOR LOGIN ${phoneNumber}
+
+          GGRANT SELECT, INSERT, UPDATE, DELETE ON KhachHang TO employee_role;
+          GRANT SELECT ON HoSoBenhAn TO employee_role;
+          GRANT SELECT, INSERT, UPDATE, DELETE ON HeThongDatLichHen TO employee_role;
+          GRANT SELECT, INSERT, UPDATE, DELETE ON LichLamViec TO employee_role;
+          GRANT SELECT, INSERT, UPDATE, DELETE ON NhaSi TO employee_role;
+
+          GRANT EXECUTE ON DatLichHenNhanVien TO ${phoneNumber}
+          GRANT EXECUTE ON DangKyKhachHang TO ${phoneNumber}
+          GRANT EXECUTE ON DatLichHen TO ${phoneNumber}
+          GRANT EXECUTE ON XemDanhSachLichHenTheoKhachHang TO ${phoneNumber}
+          GRANT EXECUTE ON XemHoSoBenhAnTheoMaKH TO ${phoneNumber}
+          GRANT EXECUTE ON XemDanhSachThuoc TO ${phoneNumber}
+          GRANT EXECUTE ON sp_ThemThuoc TO ${phoneNumber}
+          GRANT EXECUTE ON SuaThuoc TO ${phoneNumber}
+          GRANT EXECUTE ON sp_XoaThuoc TO ${phoneNumber}
+          GRANT EXECUTE ON sp_ThemKhachHang TO ${phoneNumber}
+          GRANT EXECUTE ON sp_ThemNhaSi TO ${phoneNumber}
+          GRANT EXECUTE ON sp_ThemNhanVienTO ${phoneNumber}
         `;
         break;
       case 'NhaSi':
@@ -1023,7 +1088,29 @@ app.post('/updateDrug', async (req, res) => {
           @Ngaysinh = '${birthDate}',
           @Diachi = N'${address}',
           @Matkhau = N'${password}',
-          @SDT = ${phoneNumber};
+          @SDT = ${phoneNumber}
+
+          CREATE LOGIN ${phoneNumber}
+          WITH PASSWORD = ${password},
+          CHECK_POLICY = OFF, CHECK_EXPIRATION = OFF,
+          DEFAULT_ DATABASE = UserDatabase
+
+          CREATE USER ${phoneNumber}
+          FOR LOGIN ${phoneNumber}
+
+          GRANT SELECT, INSERT, UPDATE, DELETE ON HeThongDatLichHen TO pharmacist_role;
+          GRANT SELECT ON LichLamViec TO pharmacist_role;
+          GRANT SELECT ON NhaSi TO pharmacist_role;
+          GRANT SELECT ON HoSoBenhAn TO pharmacist_role;
+          GRANT SELECT ON Thuoc TO pharmacist_role;
+
+          GRANT EXECUTE ON ThemHoSoBenhNhanTheoMaKhachHang TO ${phoneNumber}
+          GRANT EXECUTE ON ThemHoSoBenhAnTheoMaKhachHang TO ${phoneNumber}
+          GRANT EXECUTE ON XemLichHenTheoMaNhaSi TO ${phoneNumber}
+          GRANT EXECUTE ON ThemLichLamViec TO ${phoneNumber}
+          GRANT EXECUTE ON XoaLichLamViecNhaSi TO ${phoneNumber}
+          GRANT EXECUTE ON SuaThongTinCaNhanKhachHang TO ${phoneNumber}
+          GRANT EXECUTE ON XemHoSoBenhAnTheoMaKH TO ${phoneNumber}
         `;
         break;
       default:
@@ -1230,6 +1317,7 @@ app.get('/viewMedicalRecords', async (req, res) => {
       await sql.close();
   }
 });
+
 app.get('/viewMedicalRecordUser', async (req, res) => {
   try {
       const connection = await sql.connect(config);
@@ -1250,6 +1338,7 @@ app.get('/viewMedicalRecordUser', async (req, res) => {
       await sql.close();
   }
 });
+
 app.get('/getServicesAndDoctorsAndDateTime', async (req, res) => {
   try {
       const connection = await sql.connect(config);
