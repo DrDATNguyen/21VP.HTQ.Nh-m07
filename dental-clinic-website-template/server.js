@@ -71,7 +71,7 @@ app.get('/', function (req, res) {
         if (err) console.log(err);
         try {
     
-            res.render('ViewDrugList');
+            res.render('login');
         
           } catch (error) {
             // Xử lý lỗi nếu có
@@ -144,14 +144,21 @@ app.post('/login',async (req, res) => {
   try {
     // Sử dụng await khi gọi hàm loginUser
     const resultLogin = await loginUser(username, password);
-
+    const resultLogin1 = await loginAD(username, password);
     if (resultLogin) {
         // Login successful, resultLogin contains user data
         // Lưu MaKH vào session
         req.session.MaKH = resultLogin.MaKH;
         res.render('appointment');
 
-      } else {
+      } 
+      else if (resultLogin1) {
+        // Login successful, resultLogin contains user data
+        // Lưu MaKH vào session
+        // req.session.MaKH = resultLogin.MaKH;
+        res.redirect('/ViewDrugList');
+
+      }else {
         // Login failed, resultLogin is null or a designated failure indicator
         res.send('Login failed. Invalid credentials.');
       }
@@ -338,6 +345,38 @@ async function loginUser(username, password) {
       await sql.close();
     }
   }
+  async function loginAD(username, password) {
+    try {
+      // Kết nối đến cơ sở dữ liệu
+      const connection = await sql.connect(config);
+  
+    // Kiểm tra trạng thái kết nối
+    if (connection.connected) {
+      console.log('Connected to SQL Server successfully.');
+    } else {
+      console.log('Failed to connect to SQL Server.');
+      throw new Error('Không thể kết nối đến cơ sở dữ liệu.');
+    }
+      // Chuẩn bị truy vấn SQL
+      const query = `SELECT * FROM QuanTriVien WHERE SDT = '${username}' AND Matkhau = '${password}'`;
+  
+      // Thực hiện truy vấn
+      const result = await sql.query(query);
+  
+      if (result.recordset.length > 0) {
+          // Đăng nhập thành công, trả về dữ liệu người dùng
+          return result.recordset[0];
+        } else {
+          // Đăng nhập thất bại, trả về null hoặc một giá trị khác để chỉ định thất bại
+          return null;
+        }
+      } catch (error) {
+        console.error('Error during login:', error);
+        throw error;
+      } finally {
+        await sql.close();
+      }
+    }
 // async function loginUser(username, password) {
   
 //   // Tạo pool kết nối
@@ -719,6 +758,10 @@ app.post('/profile', async (req, res) => {
 });
 app.get('/addDrug', (req, res) => {
   res.render('addDrug');
+
+ });
+ app.get('/appointment', (req, res) => {
+  res.render('appointment');
 
  });
 app.post('/addDrug', async (req, res) => {
